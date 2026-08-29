@@ -47,19 +47,27 @@ export async function createAccountAction(
   if (!parsed.success) return mapZodErrors(parsed.error);
 
   const { supabase, user } = await requireUser();
-  const { error } = await supabase.from("financial_accounts").insert({
-    user_id: user.id,
-    name: parsed.data.name,
-    type: parsed.data.type,
-    nature: natureForType(parsed.data.type),
-    institution: parsed.data.institution || null,
-    currency: parsed.data.currency.toUpperCase(),
-    initial_balance: parsed.data.initialBalance,
+  const { data, error } = await supabase.rpc("create_own_financial_account", {
+    p_name: parsed.data.name,
+    p_type: parsed.data.type,
+    p_institution: parsed.data.institution || null,
+    p_currency: parsed.data.currency.toUpperCase(),
+    p_initial_balance: parsed.data.initialBalance,
   });
 
   if (error) {
-    if (error.code === "23505") return { error: "Ya tienes una cuenta con ese nombre." };
+    console.error("createAccountAction", error.message, error.code, user.id);
+    if (error.code === "23505" || error.message.includes("duplicate")) {
+      return { error: "Ya tienes una cuenta con ese nombre." };
+    }
+    if (error.message.includes("not_authenticated")) {
+      return { error: "Tu sesión expiró. Vuelve a iniciar sesión." };
+    }
     return { error: error.message || "No se pudo crear la cuenta." };
+  }
+
+  if (!data) {
+    return { error: "No se pudo crear la cuenta." };
   }
 
   revalidateFinance();
@@ -128,30 +136,51 @@ export async function updateAccountAction(
   return { success: "Cuenta actualizada." };
 }
 
-export async function archiveAccountAction(formData: FormData) {
+export async function archiveAccountAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = String(formData.get("id") ?? "");
-  const { supabase, user } = await requireUser();
+  if (!id) return { error: "Cuenta inválida." };
 
-  await supabase
-    .from("financial_accounts")
-    .update({ status: "archived" })
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("set_own_financial_account_status", {
+    p_id: id,
+    p_status: "archived",
+  });
+
+  if (error) {
+    console.error("archiveAccountAction", error.message);
+    return { error: error.message || "No se pudo archivar la cuenta." };
+  }
 
   revalidateFinance();
+  return { success: "Cuenta archivada." };
 }
 
-export async function restoreAccountAction(formData: FormData) {
+export async function restoreAccountAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = String(formData.get("id") ?? "");
-  const { supabase, user } = await requireUser();
+  if (!id) return { error: "Cuenta inválida." };
 
-  await supabase
-    .from("financial_accounts")
-    .update({ status: "active" })
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("set_own_financial_account_status", {
+    p_id: id,
+    p_status: "active",
+  });
+
+  if (error) {
+    console.error("restoreAccountAction", error.message);
+    if (error.message.includes("account_not_found")) {
+      return { error: "Cuenta no encontrada." };
+    }
+    return { error: error.message || "No se pudo restaurar la cuenta." };
+  }
 
   revalidateFinance();
+  return { success: "Cuenta restaurada." };
 }
 
 export async function deleteFinancialAccountAction(

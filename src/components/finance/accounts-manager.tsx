@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   archiveAccountAction,
   deleteFinancialAccountAction,
@@ -19,6 +19,7 @@ import {
 import type { ActionState } from "@/lib/utils/errors";
 import type { AccountWithBalanceRow } from "@/types/database";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const initialState: ActionState = {};
 
@@ -29,12 +30,37 @@ export function AccountsManager({
   active: AccountWithBalanceRow[];
   archived: AccountWithBalanceRow[];
 }) {
+  const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteState, deleteAction, deleting] = useActionState(
     deleteFinancialAccountAction,
     initialState,
   );
+  const [archiveState, archiveAction, archiving] = useActionState(
+    archiveAccountAction,
+    initialState,
+  );
+  const [restoreState, restoreAction, restoring] = useActionState(
+    restoreAccountAction,
+    initialState,
+  );
+
+  useEffect(() => {
+    if (archiveState.success || restoreState.success || deleteState.success) {
+      router.refresh();
+    }
+  }, [
+    archiveState.success,
+    restoreState.success,
+    deleteState.success,
+    router,
+  ]);
+
+  const flashError =
+    deleteState.error || archiveState.error || restoreState.error;
+  const flashSuccess =
+    deleteState.success || archiveState.success || restoreState.success;
 
   return (
     <div className="space-y-8">
@@ -48,8 +74,8 @@ export function AccountsManager({
         }
       />
 
-      {deleteState.error ? <Alert variant="error">{deleteState.error}</Alert> : null}
-      {deleteState.success ? <Alert variant="success">{deleteState.success}</Alert> : null}
+      {flashError ? <Alert variant="error">{flashError}</Alert> : null}
+      {flashSuccess ? <Alert variant="success">{flashSuccess}</Alert> : null}
 
       {active.length === 0 ? (
         <EmptyPanel
@@ -90,9 +116,13 @@ export function AccountsManager({
                 >
                   {editingId === account.id ? "Cerrar" : "Editar"}
                 </button>
-                <form action={archiveAccountAction} className="inline">
+                <form action={archiveAction} className="inline">
                   <input type="hidden" name="id" value={account.id} />
-                  <button type="submit" className="text-text-muted hover:text-text-secondary">
+                  <button
+                    type="submit"
+                    disabled={archiving}
+                    className="text-text-muted hover:text-text-secondary"
+                  >
                     Archivar
                   </button>
                 </form>
@@ -131,9 +161,13 @@ export function AccountsManager({
                   <span className="fc-amount text-text-muted">
                     {formatMoney(Number(account.current_balance), account.currency)}
                   </span>
-                  <form action={restoreAccountAction}>
+                  <form action={restoreAction}>
                     <input type="hidden" name="id" value={account.id} />
-                    <button type="submit" className="fc-link text-xs font-medium">
+                    <button
+                      type="submit"
+                      disabled={restoring}
+                      className="fc-link text-xs font-medium"
+                    >
                       Restaurar
                     </button>
                   </form>

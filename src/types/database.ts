@@ -391,6 +391,23 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: AccountWithBalance[];
       };
+      create_own_financial_account: {
+        Args: {
+          p_name: string;
+          p_type: Database["public"]["Enums"]["account_type"];
+          p_institution?: string | null;
+          p_currency?: string;
+          p_initial_balance?: number;
+        };
+        Returns: Database["public"]["Tables"]["financial_accounts"]["Row"];
+      };
+      set_own_financial_account_status: {
+        Args: {
+          p_id: string;
+          p_status: Database["public"]["Enums"]["account_status"];
+        };
+        Returns: Database["public"]["Tables"]["financial_accounts"]["Row"];
+      };
       pay_debt: {
         Args: {
           p_debt_id: string;

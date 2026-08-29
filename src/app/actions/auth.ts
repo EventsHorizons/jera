@@ -26,14 +26,27 @@ import { redirect } from "next/navigation";
 
 async function getOrigin() {
   const headerStore = await headers();
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  // Prefer configured public site URL so auth redirects never point at localhost in prod.
-  if (fromEnv && !fromEnv.includes("localhost")) {
-    return fromEnv;
+  const originHeader = headerStore.get("origin");
+  const forwardedHost = headerStore.get("x-forwarded-host");
+  const forwardedProto = headerStore.get("x-forwarded-proto") ?? "https";
+  const host = headerStore.get("host");
+
+  // Prefer the URL the user is actually on (localhost vs production).
+  if (originHeader && /^https?:\/\//.test(originHeader)) {
+    return originHeader.replace(/\/$/, "");
   }
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`.replace(/\/$/, "");
+  }
+  if (host && !host.includes("localhost")) {
+    return `https://${host}`.replace(/\/$/, "");
+  }
+  if (host) {
+    return `http://${host}`.replace(/\/$/, "");
+  }
+
   return (
-    headerStore.get("origin") ??
-    fromEnv ??
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
     "http://localhost:3000"
   );
 }
@@ -247,17 +260,43 @@ export async function forgotPasswordAction(
   );
   if (!limited.ok) return rateLimitedMessage(limited.retryAfterSeconds);
 
+  const email = parsed.data.email.toLowerCase();
   const supabase = await createClient();
   const origin = await getOrigin();
+  const redirectTo = `${origin}/auth/callback?next=/reset-password`;
 
-  // Always return the same message to avoid email enumeration.
-  await supabase.auth.resetPasswordForEmail(parsed.data.email.toLowerCase(), {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
   });
+
+  if (error) {
+    console.error("resetPasswordForEmail", error.message, { redirectTo });
+    const normalized = error.message.toLowerCase();
+    if (
+      normalized.includes("rate") ||
+      normalized.includes("security purposes") ||
+      normalized.includes("over_email")
+    ) {
+      return {
+        error:
+          "Supabase bloqueó el envío de correos (límite). Espera 1 hora o configura SMTP propio en Authentication → SMTP.",
+      };
+    }
+    if (
+      normalized.includes("redirect") ||
+      normalized.includes("url") ||
+      normalized.includes("not allowed")
+    ) {
+      return {
+        error: `URL de redirección no permitida (${origin}). En Supabase → Authentication → URL Configuration agrega exactamente: ${origin} y ${origin}/**`,
+      };
+    }
+    return { error: authErrorMessage(error.message) };
+  }
 
   return {
     success:
-      "Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.",
+      "Si el correo está registrado, el enlace ya salió. Revisa bandeja y spam. Si no llega, el SMTP gratuito de Supabase está saturado: espera o configura SMTP en el dashboard.",
   };
 }
 
@@ -460,22 +499,17 @@ export async function createFirstAccountAction(
   const blocked = await assertActiveProfile(supabase, user.id);
   if (blocked) return blocked;
 
-  const nature =
-    parsed.data.type === "credit_card" || parsed.data.type === "loan"
-      ? "liability"
-      : "asset";
-
-  const { error } = await supabase.from("financial_accounts").insert({
-    user_id: user.id,
-    name: parsed.data.name,
-    type: parsed.data.type,
-    nature,
-    currency: parsed.data.currency.toUpperCase(),
-    initial_balance: parsed.data.initialBalance,
+  const { error } = await supabase.rpc("create_own_financial_account", {
+    p_name: parsed.data.name,
+    p_type: parsed.data.type,
+    p_institution: null,
+    p_currency: parsed.data.currency.toUpperCase(),
+    p_initial_balance: parsed.data.initialBalance,
   });
 
   if (error) {
-    if (error.code === "23505") {
+    console.error("createFirstAccountAction", error.message);
+    if (error.code === "23505" || error.message.includes("duplicate")) {
       return { error: "Ya tienes una cuenta con ese nombre." };
     }
     return { error: error.message || "No se pudo crear la cuenta financiera." };
