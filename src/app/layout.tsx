@@ -6,11 +6,15 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Mono is only used on amounts / code — don't preload on every page.
 const geistMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -29,7 +33,9 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh overflow-x-hidden bg-background text-text">
+      <body
+        className={`${inter.className} min-h-dvh overflow-x-hidden bg-background text-text`}
+      >
         {children}
       </body>
     </html>

@@ -101,62 +101,52 @@ export async function registerAction(
   }
 
   const supabase = await createClient();
-  const origin = await getOrigin();
+  const email = parsed.data.email.toLowerCase();
 
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email.toLowerCase(),
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
-      data: {
-        display_name: parsed.data.displayName,
-        terms_accepted_at: new Date().toISOString(),
-        terms_version: "1.0",
-      },
-    },
-  });
-
-  if (error) {
-    return { error: authErrorMessage(error.message) };
-  }
-
-  if (!data.user) {
-    return { error: "No se pudo crear la cuenta. Inténtalo de nuevo." };
-  }
-
-  // Supabase returns an empty identities array when the email is already registered
-  // and confirmations are enabled (anti-enumeration).
-  if (data.user.identities && data.user.identities.length === 0) {
+  // Create already-confirmed users via admin API so we never depend on
+  // Supabase "Confirm email" / confirmation SMTP (rate limits + verify UI).
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (err) {
+    console.error("register admin client", err);
     return {
-      error: "Este correo ya está registrado. Inicia sesión o recupera tu contraseña.",
+      error:
+        "Configuración del servidor incompleta. Falta SUPABASE_SERVICE_ROLE_KEY.",
     };
   }
 
-  // Product decision: no email verification gate. Confirm immediately via admin API.
-  try {
-    const admin = createAdminClient();
-    const { error: confirmError } = await admin.auth.admin.updateUserById(
-      data.user.id,
-      { email_confirm: true },
-    );
-    if (confirmError) {
-      console.error("auto-confirm failed", confirmError.message);
-    }
-  } catch (err) {
-    console.error("auto-confirm unavailable", err);
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password: parsed.data.password,
+    email_confirm: true,
+    user_metadata: {
+      display_name: parsed.data.displayName,
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: "1.0",
+    },
+  });
+
+  if (createError) {
+    console.error("register createUser", createError.message);
+    return { error: authErrorMessage(createError.message) };
   }
 
-  if (!data.session) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email.toLowerCase(),
-      password: parsed.data.password,
-    });
-    if (signInError) {
-      return {
-        error:
-          "Cuenta creada, pero no se pudo iniciar sesión automáticamente. Prueba iniciar sesión.",
-      };
-    }
+  if (!created.user) {
+    return { error: "No se pudo crear la cuenta. Inténtalo de nuevo." };
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password: parsed.data.password,
+  });
+
+  if (signInError) {
+    console.error("register signIn", signInError.message);
+    return {
+      error:
+        "Cuenta creada, pero no se pudo iniciar sesión automáticamente. Prueba iniciar sesión.",
+    };
   }
 
   redirect("/onboarding");
