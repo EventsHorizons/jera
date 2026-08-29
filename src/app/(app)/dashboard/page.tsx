@@ -1,13 +1,14 @@
+import { seedStreakRiskNotification } from "@/app/actions/gamification";
+import {
+  CategoryImpactList,
+  DashboardOverview,
+  GoalsProgressStrip,
+  QuickEntryBar,
+} from "@/components/finance/dashboard-overview";
 import { ExpenseCaptureButton } from "@/components/finance/expense-capture";
-import { GamificationHud } from "@/components/finance/gamification-hud";
 import { InAppNotificationBanner } from "@/components/finance/in-app-notification-banner";
 import { InsightStories } from "@/components/finance/insight-stories";
-import {
-  OptimisticActivityRail,
-  ReactiveMoneyCards,
-} from "@/components/finance/reactive-money";
-import { SpendingTrend } from "@/components/finance/spending-trend";
-import { seedStreakRiskNotification } from "@/app/actions/gamification";
+import { OptimisticActivityRail } from "@/components/finance/reactive-money";
 import { getProfile, requireUser } from "@/lib/auth/session";
 import {
   addDaysToISODate,
@@ -15,7 +16,7 @@ import {
   formatMoney,
 } from "@/lib/finance/calculations";
 import { convertAmount, fetchUsdRates } from "@/lib/finance/fx";
-import { levelFromXp, todayInTimezone } from "@/lib/finance/gamification";
+import { todayInTimezone } from "@/lib/finance/gamification";
 import { recalculateHealth } from "@/lib/finance/gamification-service";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -40,7 +41,11 @@ function formatDayLabel(iso: string) {
 
   if (sameDay(date, today)) return "Hoy";
   if (sameDay(date, yesterday)) return "Ayer";
-  return date.toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" });
+  return date.toLocaleDateString("es", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 export default async function DashboardPage() {
@@ -52,10 +57,20 @@ export default async function DashboardPage() {
   const baseCurrency = (profile?.base_currency ?? "USD").toUpperCase();
   const tz = profile?.timezone ?? "UTC";
   const localToday = todayInTimezone(tz);
+  const graphStart = addDaysToISODate(localToday, -27);
+
+  const nowLocal = new Date(
+    new Date().toLocaleString("en-US", { timeZone: tz }),
+  );
+  const dayOfMonth = nowLocal.getDate();
+  const daysInMonth = new Date(
+    nowLocal.getFullYear(),
+    nowLocal.getMonth() + 1,
+    0,
+  ).getDate();
 
   await supabase.rpc("generate_due_recurring_transactions", { p_as_of: today });
   await seedStreakRiskNotification(user.id).catch(() => undefined);
-  // Soft refresh health if stale (>12h) or null
   if (
     !profile?.health_updated_at ||
     Date.now() - new Date(profile.health_updated_at).getTime() > 12 * 3600_000
@@ -67,45 +82,35 @@ export default async function DashboardPage() {
     { data: accounts },
     { data: monthTx },
     { data: recentTx },
-    { data: weekTx },
-    { data: todayTx },
     { data: streakRow },
-    { data: progressRow },
     { data: stories },
     { data: notifs },
     { data: freshProfile },
+    { data: goals },
+    { data: budgets },
+    { data: streakEvents },
+    { data: activityDays },
+    { data: categories },
   ] = await Promise.all([
     supabase.rpc("get_accounts_with_balance"),
     supabase
       .from("transactions")
-      .select("type, amount, is_settlement, reimburses_transaction_id, category_id, account_id")
+      .select(
+        "type, amount, is_settlement, reimburses_transaction_id, category_id, account_id, categories(name)",
+      )
       .eq("user_id", user.id)
       .gte("occurred_on", period.start)
       .lt("occurred_on", period.endExclusive),
     supabase
       .from("transactions")
-      .select("id, type, amount, occurred_on, description, account_id, categories(name)")
+      .select(
+        "id, type, amount, occurred_on, description, account_id, categories(name)",
+      )
       .eq("user_id", user.id)
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase
-      .from("transactions")
-      .select("amount, occurred_on, account_id")
-      .eq("user_id", user.id)
-      .eq("type", "expense")
-      .eq("is_settlement", false)
-      .gte("occurred_on", addDaysToISODate(today, -6))
-      .lte("occurred_on", today),
-    supabase
-      .from("transactions")
-      .select("amount, account_id")
-      .eq("user_id", user.id)
-      .eq("type", "expense")
-      .eq("is_settlement", false)
-      .eq("occurred_on", today),
     supabase.from("user_streaks").select("*").eq("user_id", user.id).maybeSingle(),
-    supabase.from("user_progress").select("*").eq("user_id", user.id).maybeSingle(),
     supabase
       .from("insight_stories")
       .select("id, title, body, kind")
@@ -125,9 +130,40 @@ export default async function DashboardPage() {
       .select("health_score")
       .eq("id", user.id)
       .maybeSingle(),
+    supabase
+      .from("saving_goals")
+      .select("id, name, target_amount, current_amount, status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("budgets")
+      .select("id, amount_limit, category_id")
+      .eq("user_id", user.id)
+      .eq("period_month", period.month)
+      .eq("period_year", period.year),
+    supabase
+      .from("streak_events")
+      .select("occurred_on, kind")
+      .eq("user_id", user.id)
+      .gte("occurred_on", graphStart)
+      .lte("occurred_on", localToday),
+    supabase
+      .from("transactions")
+      .select("occurred_on")
+      .eq("user_id", user.id)
+      .eq("is_settlement", false)
+      .gte("occurred_on", graphStart)
+      .lte("occurred_on", localToday),
+    supabase
+      .from("categories")
+      .select("id, name")
+      .eq("user_id", user.id)
+      .eq("kind", "expense")
+      .order("name")
+      .limit(8),
   ]);
-
-  const levelInfo = levelFromXp(progressRow?.xp_total ?? 0);
 
   const activeAccounts = (accounts ?? []).filter((a) => a.status === "active");
   const hasAccounts = activeAccounts.length > 0;
@@ -151,48 +187,80 @@ export default async function DashboardPage() {
   const toBase = (amount: number, currency: string) =>
     convertAmount(amount, currency, baseCurrency, rates);
 
-  const availableRows = activeAccounts.map((a) => ({
-    amount: Number(a.current_balance),
-    currency: a.currency,
-  }));
-  const monthExpenseRows = (monthTx ?? [])
+  const available = activeAccounts.reduce(
+    (s, a) => s + toBase(Number(a.current_balance), a.currency),
+    0,
+  );
+  const monthExpense = (monthTx ?? [])
     .filter((t) => t.type === "expense" && !t.is_settlement)
-    .map((t) => ({
-      amount: Number(t.amount),
-      currency: currencyOf(t.account_id),
-    }));
-  const monthIncomeRows = (monthTx ?? [])
+    .reduce(
+      (s, t) => s + toBase(Number(t.amount), currencyOf(t.account_id)),
+      0,
+    );
+  const monthIncome = (monthTx ?? [])
     .filter((t) => t.type === "income" && !t.is_settlement)
-    .map((t) => ({
-      amount: Number(t.amount),
-      currency: currencyOf(t.account_id),
-    }));
-  const todayExpenseRows = (todayTx ?? []).map((t) => ({
-    amount: Number(t.amount),
-    currency: currencyOf(t.account_id),
-  }));
+    .reduce(
+      (s, t) => s + toBase(Number(t.amount), currencyOf(t.account_id)),
+      0,
+    );
 
-  const trendDays: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    trendDays.push(d.toISOString().slice(0, 10));
+  const spentByCategoryBudget: Record<string, number> = {};
+  for (const expense of monthTx ?? []) {
+    if (
+      expense.type !== "expense" ||
+      expense.is_settlement ||
+      !expense.category_id
+    ) {
+      continue;
+    }
+    spentByCategoryBudget[expense.category_id] =
+      (spentByCategoryBudget[expense.category_id] ?? 0) +
+      toBase(Number(expense.amount), currencyOf(expense.account_id));
   }
 
-  const spendByDay = new Map<string, number>();
-  for (const day of trendDays) spendByDay.set(day, 0);
-  for (const tx of weekTx ?? []) {
-    const key = tx.occurred_on as string;
-    spendByDay.set(
-      key,
-      (spendByDay.get(key) ?? 0) + toBase(Number(tx.amount), currencyOf(tx.account_id)),
+  let budgetRemainingPct: number | null = null;
+  if ((budgets ?? []).length > 0) {
+    let limit = 0;
+    let spent = 0;
+    for (const b of budgets ?? []) {
+      limit += Number(b.amount_limit);
+      spent += spentByCategoryBudget[b.category_id] ?? 0;
+    }
+    budgetRemainingPct =
+      limit > 0 ? Math.max(0, Math.min(100, ((limit - spent) / limit) * 100)) : 0;
+  }
+
+  const activeDates = new Set<string>();
+  for (const e of streakEvents ?? []) {
+    if (e.kind === "freeze_used") continue;
+    activeDates.add(e.occurred_on);
+  }
+  for (const t of activityDays ?? []) {
+    activeDates.add(t.occurred_on as string);
+  }
+
+  const dayCells: Array<{ date: string; active: boolean }> = [];
+  for (let i = 27; i >= 0; i--) {
+    const date = addDaysToISODate(localToday, -i);
+    dayCells.push({ date, active: activeDates.has(date) });
+  }
+
+  const categorySpend = new Map<string, number>();
+  for (const t of monthTx ?? []) {
+    if (t.type !== "expense" || t.is_settlement) continue;
+    const name =
+      (t.categories as { name?: string } | null)?.name ?? "Sin categoría";
+    categorySpend.set(
+      name,
+      (categorySpend.get(name) ?? 0) +
+        toBase(Number(t.amount), currencyOf(t.account_id)),
     );
   }
+  const categoryRows = [...categorySpend.entries()]
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
 
-  const trendPoints = trendDays.map((day) => ({
-    label: new Date(`${day}T12:00:00`).toLocaleDateString("es", { weekday: "narrow" }),
-    value: spendByDay.get(day) ?? 0,
-  }));
+  const monthlySaveRate = Math.max(0, monthIncome - monthExpense);
 
   const grouped = new Map<string, NonNullable<typeof recentTx>>();
   for (const tx of recentTx ?? []) {
@@ -201,19 +269,33 @@ export default async function DashboardPage() {
     grouped.get(day)!.push(tx);
   }
 
-  const monthLabel = new Date(`${period.start}T12:00:00`).toLocaleDateString("es", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = new Date(`${period.start}T12:00:00`).toLocaleDateString(
+    "es",
+    { month: "long", year: "numeric" },
+  );
+
+  const insightPoints = [
+    budgetRemainingPct != null
+      ? `Presupuesto: ${budgetRemainingPct.toFixed(0)}% restante`
+      : "Sin presupuestos activos este mes",
+    monthIncome > 0
+      ? `Capacidad de ahorro ${(
+          Math.max(0, ((monthIncome - monthExpense) / monthIncome) * 100)
+        ).toFixed(0)}%`
+      : "Registra ingresos para medir capacidad de ahorro",
+    categoryRows[0]
+      ? `Mayor impacto: ${categoryRows[0].name}`
+      : "Sin gastos categorizados aún",
+  ];
 
   return (
     <div className="fc-bento-grid">
-      <div className="col-span-12 space-y-6 lg:col-span-8">
+      <div className="col-span-12 space-y-5 lg:col-span-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h1 className="fc-page-title text-lg md:text-xl">Inicio</h1>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              Impacto de {monthLabel} en {baseCurrency}.
+            <p className="text-sm text-text-secondary">
+              {monthLabel} · {baseCurrency}
             </p>
           </div>
           <ExpenseCaptureButton className="hidden sm:inline-flex" />
@@ -221,47 +303,90 @@ export default async function DashboardPage() {
 
         <InAppNotificationBanner items={notifs ?? []} />
 
-        <GamificationHud
-          streak={streakRow?.current_streak ?? 0}
-          freezeTokens={streakRow?.freeze_tokens ?? 0}
-          qualifiedToday={streakRow?.last_qualified_on === localToday}
-          healthScore={Number(freshProfile?.health_score ?? profile?.health_score ?? 50)}
-          xpTotal={progressRow?.xp_total ?? 0}
-          level={levelInfo.level}
-          levelName={levelInfo.name}
-          nextXp={levelInfo.nextXp}
-        />
+        {hasAccounts ? (
+          <>
+            <QuickEntryBar
+              categories={(categories ?? []).map((c) => ({
+                value: c.id,
+                label: c.name,
+              }))}
+            />
 
-        <InsightStories stories={stories ?? []} />
+            <DashboardOverview
+              available={available}
+              monthExpense={monthExpense}
+              monthIncome={monthIncome}
+              baseCurrency={baseCurrency}
+              healthScore={Number(
+                freshProfile?.health_score ?? profile?.health_score ?? 50,
+              )}
+              streak={streakRow?.current_streak ?? 0}
+              freezeTokens={streakRow?.freeze_tokens ?? 0}
+              qualifiedToday={streakRow?.last_qualified_on === localToday}
+              dayCells={dayCells}
+              dayOfMonth={dayOfMonth}
+              daysInMonth={daysInMonth}
+              budgetRemainingPct={budgetRemainingPct}
+            />
 
-        {!hasAccounts ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              <GoalsProgressStrip
+                goals={(goals ?? []).map((g) => ({
+                  id: g.id,
+                  name: g.name,
+                  target_amount: Number(g.target_amount),
+                  current_amount: Number(g.current_amount),
+                }))}
+                baseCurrency={baseCurrency}
+                monthlySaveRate={monthlySaveRate}
+              />
+              <CategoryImpactList
+                rows={categoryRows}
+                baseCurrency={baseCurrency}
+              />
+            </div>
+
+            <section className="rounded-xl border border-zinc-200 bg-white p-4">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                Lectura rápida del período
+              </p>
+              <ol className="mt-3 space-y-2">
+                {insightPoints.map((point, i) => (
+                  <li
+                    key={point}
+                    className="flex gap-2 text-sm text-zinc-700"
+                  >
+                    <span className="font-mono text-xs text-zinc-400">
+                      {i + 1}.
+                    </span>
+                    {point}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </>
+        ) : (
           <div className="fc-empty py-10 text-center">
             <p className="font-medium text-text">Crea tu primera cuenta</p>
             <p className="mx-auto mt-2 max-w-sm text-sm text-text-secondary">
-              Sin una cuenta no podemos calcular tu balance ni registrar movimientos.
+              Sin una cuenta no podemos calcular tu balance ni registrar
+              movimientos.
             </p>
             <Link href="/accounts" className="fc-btn-ai mt-6 inline-flex">
               Agregar cuenta
             </Link>
           </div>
-        ) : (
-          <>
-            <ReactiveMoneyCards
-              available={availableRows}
-              monthExpense={monthExpenseRows}
-              monthIncome={monthIncomeRows}
-              todayExpense={todayExpenseRows}
-            />
-
-            <SpendingTrend points={trendPoints} currency={baseCurrency} />
-          </>
         )}
+
+        <InsightStories stories={stories ?? []} />
       </div>
 
       {hasAccounts ? (
         <section className="col-span-12 lg:col-span-4">
           <div className="mb-4 flex items-baseline justify-between gap-4 lg:sticky lg:top-24">
-            <h2 className="text-sm font-medium leading-none text-text">Actividad reciente</h2>
+            <h2 className="text-sm font-medium leading-none text-text">
+              Actividad reciente
+            </h2>
             <Link href="/transactions" className="text-xs leading-none fc-link">
               Ver todo →
             </Link>
@@ -271,7 +396,11 @@ export default async function DashboardPage() {
 
           {(recentTx ?? []).length === 0 ? (
             <p className="text-sm text-text-muted">
-              Sin movimientos. Pulsa + o{" "}
+              Sin movimientos. Pulsa{" "}
+              <kbd className="rounded-lg border border-border/80 px-2 py-1 font-mono text-xs">
+                N
+              </kbd>{" "}
+              o{" "}
               <kbd className="rounded-lg border border-border/80 px-2 py-1 font-mono text-xs">
                 ⌘K
               </kbd>
@@ -295,7 +424,8 @@ export default async function DashboardPage() {
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium leading-none text-text">
                                 {tx.description ||
-                                  (tx.categories as { name?: string } | null)?.name ||
+                                  (tx.categories as { name?: string } | null)
+                                    ?.name ||
                                   TYPE_LABELS[tx.type]}
                               </p>
                               <span
@@ -321,7 +451,10 @@ export default async function DashboardPage() {
                             >
                               {isExpense ? "−" : isIncome ? "+" : ""}
                               {formatMoney(
-                                toBase(Number(tx.amount), currencyOf(tx.account_id)),
+                                toBase(
+                                  Number(tx.amount),
+                                  currencyOf(tx.account_id),
+                                ),
                                 baseCurrency,
                               )}
                             </span>

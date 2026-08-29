@@ -10,6 +10,10 @@ import {
   ExpenseCaptureProvider,
   useExpenseCapture,
 } from "@/components/finance/expense-capture";
+import {
+  CommandPalette,
+  CommandTrigger,
+} from "@/components/layout/command-palette";
 import { cn } from "@/lib/utils/cn";
 import {
   ChevronLeft,
@@ -33,7 +37,7 @@ const NAV = [
 
 const MORE_LINKS = [
   { href: "/accounts", label: "Cuentas" },
-  { href: "/achievements", label: "Progreso" },
+  { href: "/achievements", label: "Hitos" },
   { href: "/settings/profile", label: "Ajustes" },
 ] as const;
 
@@ -184,7 +188,7 @@ export function AppShell({
             <Link href="/dashboard" className="sm:hidden">
               <JeraLogo size="sm" />
             </Link>
-            <ExpenseCaptureTriggerSearch className="hidden sm:flex" />
+            <CommandTrigger className="hidden sm:flex" />
             <div className="relative ml-auto flex items-center gap-2" ref={menuRef}>
               <BaseCurrencySwitcher className="hidden sm:block" />
               <button
@@ -216,6 +220,8 @@ export function AppShell({
           </header>
 
           <main className="fc-main pb-24 sm:pb-8">{children}</main>
+
+          <CommandPalette />
 
           <nav className="fc-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-surface/95 backdrop-blur sm:hidden">
             <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
@@ -276,30 +282,11 @@ function ExpenseCaptureNavCenter() {
       <button
         type="button"
         onClick={open}
-        className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-[0_4px_16px_rgba(0,0,0,0.18)] transition active:scale-95"
+        className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white transition active:scale-95"
         aria-label="Agregar gasto"
       >
         <Plus className="h-6 w-6" strokeWidth={2} />
       </button>
     </div>
-  );
-}
-
-function ExpenseCaptureTriggerSearch({ className }: { className?: string }) {
-  const { open } = useExpenseCapture();
-  return (
-    <button
-      type="button"
-      onClick={open}
-      className={cn(
-        "h-11 flex-1 items-center gap-2 rounded-xl border border-border/80 bg-surface-muted px-4 text-sm text-text-muted transition hover:bg-zinc-100 lg:max-w-md",
-        className,
-      )}
-    >
-      <span>Registrar gasto…</span>
-      <kbd className="ml-auto rounded-lg border border-border/80 bg-surface px-2 py-1 font-mono text-xs">
-        ⌘K
-      </kbd>
-    </button>
   );
 }
