@@ -1,8 +1,11 @@
-import { BalanceCard } from "@/components/finance/balance-card";
 import { ExpenseCaptureButton } from "@/components/finance/expense-capture";
 import { GamificationHud } from "@/components/finance/gamification-hud";
 import { InAppNotificationBanner } from "@/components/finance/in-app-notification-banner";
 import { InsightStories } from "@/components/finance/insight-stories";
+import {
+  OptimisticActivityRail,
+  ReactiveMoneyCards,
+} from "@/components/finance/reactive-money";
 import { SpendingTrend } from "@/components/finance/spending-trend";
 import { seedStreakRiskNotification } from "@/app/actions/gamification";
 import { getProfile, requireUser } from "@/lib/auth/session";
@@ -15,7 +18,6 @@ import { convertAmount, fetchUsdRates } from "@/lib/finance/fx";
 import { levelFromXp, todayInTimezone } from "@/lib/finance/gamification";
 import { recalculateHealth } from "@/lib/finance/gamification-service";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
 import Link from "next/link";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -149,25 +151,26 @@ export default async function DashboardPage() {
   const toBase = (amount: number, currency: string) =>
     convertAmount(amount, currency, baseCurrency, rates);
 
-  const availableBase = activeAccounts.reduce(
-    (sum, a) => sum + toBase(Number(a.current_balance), a.currency),
-    0,
-  );
-
-  const monthIncome = (monthTx ?? []).reduce((sum, t) => {
-    if (t.type !== "income" || t.is_settlement) return sum;
-    return sum + toBase(Number(t.amount), currencyOf(t.account_id));
-  }, 0);
-
-  const monthExpense = (monthTx ?? []).reduce((sum, t) => {
-    if (t.type !== "expense" || t.is_settlement) return sum;
-    return sum + toBase(Number(t.amount), currencyOf(t.account_id));
-  }, 0);
-
-  const todayExpense = (todayTx ?? []).reduce(
-    (sum, t) => sum + toBase(Number(t.amount), currencyOf(t.account_id)),
-    0,
-  );
+  const availableRows = activeAccounts.map((a) => ({
+    amount: Number(a.current_balance),
+    currency: a.currency,
+  }));
+  const monthExpenseRows = (monthTx ?? [])
+    .filter((t) => t.type === "expense" && !t.is_settlement)
+    .map((t) => ({
+      amount: Number(t.amount),
+      currency: currencyOf(t.account_id),
+    }));
+  const monthIncomeRows = (monthTx ?? [])
+    .filter((t) => t.type === "income" && !t.is_settlement)
+    .map((t) => ({
+      amount: Number(t.amount),
+      currency: currencyOf(t.account_id),
+    }));
+  const todayExpenseRows = (todayTx ?? []).map((t) => ({
+    amount: Number(t.amount),
+    currency: currencyOf(t.account_id),
+  }));
 
   const trendDays: string[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -243,26 +246,12 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="fc-metric-grid">
-              <BalanceCard
-                label="Disponible"
-                value={formatMoney(availableBase, baseCurrency)}
-                icon={Wallet}
-              />
-              <BalanceCard
-                label="Gastaste este mes"
-                value={formatMoney(monthExpense, baseCurrency)}
-                subtitle={`Hoy: ${formatMoney(todayExpense, baseCurrency)}`}
-                icon={ArrowUpRight}
-                tone="expense"
-              />
-              <BalanceCard
-                label="Ingresos del mes"
-                value={formatMoney(monthIncome, baseCurrency)}
-                icon={ArrowDownLeft}
-                tone="income"
-              />
-            </div>
+            <ReactiveMoneyCards
+              available={availableRows}
+              monthExpense={monthExpenseRows}
+              monthIncome={monthIncomeRows}
+              todayExpense={todayExpenseRows}
+            />
 
             <SpendingTrend points={trendPoints} currency={baseCurrency} />
           </>
@@ -277,6 +266,8 @@ export default async function DashboardPage() {
               Ver todo →
             </Link>
           </div>
+
+          <OptimisticActivityRail />
 
           {(recentTx ?? []).length === 0 ? (
             <p className="text-sm text-text-muted">

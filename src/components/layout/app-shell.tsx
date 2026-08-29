@@ -2,6 +2,10 @@
 
 import { JeraLogo, JeraMark } from "@/components/brand/jera-logo";
 import {
+  BaseCurrencyProvider,
+  BaseCurrencySwitcher,
+} from "@/components/finance/base-currency-provider";
+import {
   ExpenseCaptureButton,
   ExpenseCaptureProvider,
   useExpenseCapture,
@@ -67,11 +71,12 @@ export function AppShell({
   }, [menuOpen]);
 
   return (
-    <ExpenseCaptureProvider
-      accounts={accounts}
-      categories={categories}
-      baseCurrency={baseCurrency}
-    >
+    <BaseCurrencyProvider initial={baseCurrency}>
+      <ExpenseCaptureProvider
+        accounts={accounts}
+        categories={categories}
+        baseCurrency={baseCurrency}
+      >
       <div className="fc-app-root">
         <aside
           className={cn(
@@ -181,6 +186,7 @@ export function AppShell({
             </Link>
             <ExpenseCaptureTriggerSearch className="hidden sm:flex" />
             <div className="relative ml-auto flex items-center gap-2" ref={menuRef}>
+              <BaseCurrencySwitcher className="hidden sm:block" />
               <button
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
@@ -233,6 +239,7 @@ export function AppShell({
         </div>
       </div>
     </ExpenseCaptureProvider>
+    </BaseCurrencyProvider>
   );
 }
 

@@ -132,6 +132,29 @@ export async function updateCohortOptInAction(
   };
 }
 
+export async function updateBaseCurrencyAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const code = String(formData.get("baseCurrency") ?? "")
+    .trim()
+    .toUpperCase();
+  if (!/^[A-Z]{3}$/.test(code)) {
+    return { error: "Moneda inválida." };
+  }
+  const { user } = await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ base_currency: code })
+    .eq("id", user.id);
+  if (error) return { error: "No se pudo actualizar la moneda base." };
+  revalidatePath("/dashboard");
+  revalidatePath("/settings/profile");
+  revalidatePath("/", "layout");
+  return { success: `Moneda base: ${code}` };
+}
+
 export async function refreshHealthAction(): Promise<ActionState> {
   const { user } = await requireUser();
   const supabase = await createClient();

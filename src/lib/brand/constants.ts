@@ -6,4 +6,7 @@ export const APP_RUNE = "ᛃ";
 
 export const STORAGE_KEYS = {
   lastExpense: "jera:last-expense",
+  fxCache: "jera:fx-cache",
+  baseCurrencyOverride: "jera:base-currency",
+  optimisticExpenses: "jera:optimistic-expenses",
 } as const;
