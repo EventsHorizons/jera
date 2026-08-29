@@ -21,6 +21,9 @@
   --warning-soft: #fffbeb;
   --success: #10b981;
   --success-soft: #ecfdf5;
+  --action: #0284c7;
+  --action-hover: #0369a1;
+  --action-soft: #f0f9ff;
   /* Layout tokens — 8px engine */
   --fc-sidebar-w: 15rem; /* 240px */
   --fc-sidebar-collapsed: 4rem; /* 64px */
@@ -49,6 +52,9 @@
   --color-warning-soft: var(--warning-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-soft: var(--action-soft);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }

@@ -221,7 +221,7 @@ export function AppShell({
 
           <main className="fc-main pb-24 sm:pb-8">{children}</main>
 
-          <CommandPalette />
+          <CommandPalette categories={categories} />
 
           <nav className="fc-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-surface/95 backdrop-blur sm:hidden">
             <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">

@@ -6,6 +6,7 @@ describe("parseQuickEntry", () => {
     expect(parseQuickEntry("Almuerzo $25 en restaurante")).toEqual({
       amount: 25,
       description: "Almuerzo restaurante",
+      currency: null,
     });
   });
 
@@ -13,6 +14,7 @@ describe("parseQuickEntry", () => {
     expect(parseQuickEntry("Uber 12.50")).toEqual({
       amount: 12.5,
       description: "Uber",
+      currency: null,
     });
   });
 
@@ -20,6 +22,7 @@ describe("parseQuickEntry", () => {
     expect(parseQuickEntry("Almuerzo $25.000")).toEqual({
       amount: 25000,
       description: "Almuerzo",
+      currency: null,
     });
   });
 
@@ -27,6 +30,15 @@ describe("parseQuickEntry", () => {
     expect(parseQuickEntry("solo texto")).toEqual({
       amount: null,
       description: "solo texto",
+      currency: null,
+    });
+  });
+
+  it("detects currency code", () => {
+    expect(parseQuickEntry("Café 12.50 COP")).toEqual({
+      amount: 12.5,
+      description: "Café",
+      currency: "COP",
     });
   });
 });

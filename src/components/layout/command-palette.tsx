@@ -38,7 +38,11 @@ type Command = {
   run: () => void;
 };
 
-export function CommandPalette() {
+export function CommandPalette({
+  categories = [],
+}: {
+  categories?: Array<{ value: string; label: string }>;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -53,6 +57,14 @@ export function CommandPalette() {
     setActive(0);
   }, []);
 
+  const focusQuickOrSheet = useCallback(() => {
+    const detail = { handled: false };
+    document.dispatchEvent(
+      new CustomEvent("jera:focus-quick-entry", { detail }),
+    );
+    if (!detail.handled) openExpense();
+  }, [openExpense]);
+
   const commands = useMemo<Command[]>(
     () => [
       {
@@ -64,7 +76,8 @@ export function CommandPalette() {
         icon: ArrowUpRight,
         run: () => {
           close();
-          openExpense();
+          // Defer so palette unmounts before focus
+          requestAnimationFrame(() => focusQuickOrSheet());
         },
       },
       {
@@ -76,6 +89,17 @@ export function CommandPalette() {
         run: () => {
           close();
           router.push("/transactions");
+        },
+      },
+      {
+        id: "create-goal",
+        label: "Crear meta de ahorro",
+        group: "Acciones",
+        keywords: "meta goal crear objetivo ahorro",
+        icon: Target,
+        run: () => {
+          close();
+          router.push("/goals?new=1");
         },
       },
       {
@@ -135,9 +159,9 @@ export function CommandPalette() {
       },
       {
         id: "nav-progress",
-        label: "Ir a Progreso",
+        label: "Ir a Hitos",
         group: "Navegación",
-        keywords: "logros achievements",
+        keywords: "logros achievements hitos progreso",
         icon: Trophy,
         run: () => {
           close();
@@ -155,6 +179,17 @@ export function CommandPalette() {
           router.push("/settings/profile");
         },
       },
+      ...categories.slice(0, 12).map((c) => ({
+        id: `filter-cat-${c.value}`,
+        label: `Filtrar: ${c.label}`,
+        group: "Filtros",
+        keywords: `categoria category filtrar ${c.label.toLowerCase()}`,
+        icon: Receipt,
+        run: () => {
+          close();
+          router.push(`/transactions?category=${encodeURIComponent(c.value)}`);
+        },
+      })),
       {
         id: "fx-usd",
         label: "Moneda base → USD",
@@ -200,7 +235,7 @@ export function CommandPalette() {
         },
       },
     ],
-    [close, openExpense, router, setBaseCurrency],
+    [categories, close, focusQuickOrSheet, router, setBaseCurrency],
   );
 
   const filtered = useMemo(() => {
@@ -232,7 +267,11 @@ export function CommandPalette() {
 
       if (!typing && !open && e.key.toLowerCase() === "n" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        openExpense();
+        const detail = { handled: false };
+        document.dispatchEvent(
+          new CustomEvent("jera:focus-quick-entry", { detail }),
+        );
+        if (!detail.handled) openExpense();
         return;
       }
 

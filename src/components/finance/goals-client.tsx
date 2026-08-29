@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { deleteGoalAction } from "@/app/actions/finance";
 import {
   GoalContributeForm,
@@ -29,9 +30,16 @@ export function GoalsClient({
   goals: Goal[];
   baseCurrency?: string;
 }) {
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [contributeId, setContributeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setCreateOpen(true);
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-8">

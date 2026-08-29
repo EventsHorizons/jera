@@ -3,8 +3,8 @@ import {
   CategoryImpactList,
   DashboardOverview,
   GoalsProgressStrip,
-  QuickEntryBar,
 } from "@/components/finance/dashboard-overview";
+import { QuickEntryBar } from "@/components/finance/quick-entry-bar";
 import { ExpenseCaptureButton } from "@/components/finance/expense-capture";
 import { InAppNotificationBanner } from "@/components/finance/in-app-notification-banner";
 import { InsightStories } from "@/components/finance/insight-stories";
@@ -245,20 +245,23 @@ export default async function DashboardPage() {
     dayCells.push({ date, active: activeDates.has(date) });
   }
 
-  const categorySpend = new Map<string, number>();
+  const categorySpend = new Map<string, { id?: string; name: string; amount: number }>();
   for (const t of monthTx ?? []) {
     if (t.type !== "expense" || t.is_settlement) continue;
     const name =
       (t.categories as { name?: string } | null)?.name ?? "Sin categoría";
-    categorySpend.set(
+    const key = t.category_id ?? name;
+    const prev = categorySpend.get(key);
+    const add = toBase(Number(t.amount), currencyOf(t.account_id));
+    categorySpend.set(key, {
+      id: t.category_id ?? undefined,
       name,
-      (categorySpend.get(name) ?? 0) +
-        toBase(Number(t.amount), currencyOf(t.account_id)),
-    );
+      amount: (prev?.amount ?? 0) + add,
+    });
   }
-  const categoryRows = [...categorySpend.entries()]
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount);
+  const categoryRows = [...categorySpend.values()].sort(
+    (a, b) => b.amount - a.amount,
+  );
 
   const monthlySaveRate = Math.max(0, monthIncome - monthExpense);
 
@@ -306,10 +309,16 @@ export default async function DashboardPage() {
         {hasAccounts ? (
           <>
             <QuickEntryBar
+              accounts={activeAccounts.map((a) => ({
+                value: a.id,
+                label: a.name,
+                currency: a.currency,
+              }))}
               categories={(categories ?? []).map((c) => ({
                 value: c.id,
                 label: c.name,
               }))}
+              baseCurrency={baseCurrency}
             />
 
             <DashboardOverview

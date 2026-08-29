@@ -1,9 +1,10 @@
 "use client";
 
 import { budgetCheckinAction } from "@/app/actions/gamification";
+import { contributeGoalAction } from "@/app/actions/finance";
 import { useExpenseCapture } from "@/components/finance/expense-capture";
 import { Button } from "@/components/ui/button";
-import { formatMoney } from "@/lib/finance/calculations";
+import { formatMoney, todayISODate } from "@/lib/finance/calculations";
 import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -162,7 +163,13 @@ export function DashboardOverview({
             )}
             <button
               type="button"
-              onClick={open}
+              onClick={() => {
+                const detail = { handled: false };
+                document.dispatchEvent(
+                  new CustomEvent("jera:focus-quick-entry", { detail }),
+                );
+                if (!detail.handled) open();
+              }}
               className="h-8 rounded-md border border-zinc-200 px-3 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
             >
               Agregar gasto · N
@@ -189,7 +196,36 @@ export function GoalsProgressStrip({
   baseCurrency: string;
   monthlySaveRate: number;
 }) {
+  const router = useRouter();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [customByGoal, setCustomByGoal] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
   if (goals.length === 0) return null;
+
+  const presets = [10, 50, 100];
+
+  const contribute = (goalId: string, amount: number) => {
+    if (!(amount > 0)) return;
+    setPendingId(goalId);
+    setMsg(null);
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("goalId", goalId);
+      fd.set("amount", String(amount));
+      fd.set("contributedOn", todayISODate());
+      const res = await contributeGoalAction({}, fd);
+      setPendingId(null);
+      if (res.success) {
+        setMsg(res.success);
+        setCustomByGoal((prev) => ({ ...prev, [goalId]: "" }));
+        router.refresh();
+      } else {
+        setMsg(res.error ?? "No se pudo registrar el aporte.");
+      }
+    });
+  };
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -197,11 +233,19 @@ export function GoalsProgressStrip({
         <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
           Objetivos de ahorro
         </p>
-        <Link href="/goals" className="text-xs text-zinc-500 hover:text-zinc-800">
-          Ver todos →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/recurring"
+            className="text-xs text-action hover:text-action-hover"
+          >
+            Recurrente
+          </Link>
+          <Link href="/goals" className="text-xs text-zinc-500 hover:text-zinc-800">
+            Ver todos →
+          </Link>
+        </div>
       </div>
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {goals.map((g) => {
           const pct =
             g.target_amount > 0
@@ -212,6 +256,7 @@ export function GoalsProgressStrip({
             monthlySaveRate > 0
               ? Math.ceil(remaining / monthlySaveRate)
               : null;
+          const busy = pending && pendingId === g.id;
           return (
             <li key={g.id}>
               <div className="flex items-baseline justify-between gap-2">
@@ -235,10 +280,57 @@ export function GoalsProgressStrip({
                   ? ` · ~${monthsLeft} mes${monthsLeft === 1 ? "" : "es"} al ritmo actual`
                   : ""}
               </p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {presets.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => contribute(g.id, n)}
+                    className="h-7 rounded-md border border-zinc-200 px-2 font-mono text-[11px] text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-50"
+                  >
+                    +{n}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="Otro"
+                  value={customByGoal[g.id] ?? ""}
+                  onChange={(e) =>
+                    setCustomByGoal((prev) => ({
+                      ...prev,
+                      [g.id]: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const n = Number.parseFloat(customByGoal[g.id] ?? "");
+                      if (Number.isFinite(n) && n > 0) contribute(g.id, n);
+                    }
+                  }}
+                  className="h-7 w-16 rounded-md border border-zinc-200 bg-zinc-50 px-2 font-mono text-[11px] outline-none focus:border-action"
+                />
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    const n = Number.parseFloat(customByGoal[g.id] ?? "");
+                    if (Number.isFinite(n) && n > 0) contribute(g.id, n);
+                  }}
+                  className="h-7 rounded-md bg-action px-2 text-[11px] font-medium text-white transition hover:bg-action-hover disabled:opacity-50"
+                >
+                  Aportar
+                </button>
+              </div>
             </li>
           );
         })}
       </ul>
+      {msg ? <p className="mt-3 text-xs text-zinc-500">{msg}</p> : null}
     </section>
   );
 }
@@ -247,7 +339,7 @@ export function CategoryImpactList({
   rows,
   baseCurrency,
 }: {
-  rows: Array<{ name: string; amount: number }>;
+  rows: Array<{ id?: string; name: string; amount: number }>;
   baseCurrency: string;
 }) {
   if (rows.length === 0) return null;
@@ -265,22 +357,38 @@ export function CategoryImpactList({
         </p>
       </div>
       <ul className="space-y-2.5">
-        {rows.slice(0, 6).map((r) => (
-          <li key={r.name}>
-            <div className="mb-1 flex items-baseline justify-between gap-2">
-              <span className="truncate text-sm text-zinc-700">{r.name}</span>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-zinc-500">
-                {formatMoney(r.amount, baseCurrency)}
-              </span>
-            </div>
-            <div className="h-1 overflow-hidden rounded-full bg-zinc-100">
-              <div
-                className="h-full rounded-full bg-zinc-400"
-                style={{ width: `${(r.amount / max) * 100}%` }}
-              />
-            </div>
-          </li>
-        ))}
+        {rows.slice(0, 6).map((r) => {
+          const inner = (
+            <>
+              <div className="mb-1 flex items-baseline justify-between gap-2">
+                <span className="truncate text-sm text-zinc-700">{r.name}</span>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-zinc-500">
+                  {formatMoney(r.amount, baseCurrency)}
+                </span>
+              </div>
+              <div className="h-1 overflow-hidden rounded-full bg-zinc-100">
+                <div
+                  className="h-full rounded-full bg-zinc-400"
+                  style={{ width: `${(r.amount / max) * 100}%` }}
+                />
+              </div>
+            </>
+          );
+          return (
+            <li key={r.id ?? r.name}>
+              {r.id ? (
+                <Link
+                  href={`/transactions?category=${encodeURIComponent(r.id)}`}
+                  className="block rounded-md transition hover:opacity-80"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                inner
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -346,39 +454,35 @@ function ConsistencyGraph({ cells }: { cells: DayCell[] }) {
   );
 }
 
-export function QuickEntryBar({
-  categories,
-}: {
-  categories: Array<{ value: string; label: string }>;
-}) {
-  const { open } = useExpenseCapture();
-  const top = categories.slice(0, 6);
-
+export function DashboardMetricsSkeleton() {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-2 sm:flex-row sm:items-center">
-      <button
-        type="button"
-        onClick={open}
-        className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg bg-zinc-50 px-3 text-left text-sm text-zinc-500 transition hover:bg-zinc-100"
-      >
-        <span className="font-mono text-zinc-300">$</span>
-        <span className="truncate">Monto · categoría · confirmar</span>
-        <kbd className="ml-auto hidden rounded border border-zinc-200 bg-white px-1.5 font-mono text-[10px] text-zinc-400 sm:inline">
-          N
-        </kbd>
-      </button>
-      <div className="flex flex-wrap gap-1.5 px-1 sm:px-0">
-        {top.map((c) => (
-          <button
-            key={c.value}
-            type="button"
-            onClick={open}
-            className="h-8 rounded-full border border-zinc-200 px-2.5 text-xs text-zinc-600 transition hover:border-zinc-300 hover:bg-zinc-50"
+    <section className="animate-pulse space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-zinc-200 bg-white p-4"
           >
-            {c.label}
-          </button>
+            <div className="h-3 w-24 rounded bg-zinc-100" />
+            <div className="mt-3 h-7 w-32 rounded bg-zinc-100" />
+            <div className="mt-2 h-3 w-20 rounded bg-zinc-50" />
+          </div>
         ))}
       </div>
-    </div>
+      <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
+        <div className="h-28 rounded-xl border border-zinc-200 bg-white p-4">
+          <div className="h-3 w-28 rounded bg-zinc-100" />
+          <div className="mt-6 h-1.5 rounded-full bg-zinc-100" />
+        </div>
+        <div className="h-28 rounded-xl border border-zinc-200 bg-white p-4">
+          <div className="h-3 w-20 rounded bg-zinc-100" />
+          <div className="mt-4 flex gap-1">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="h-2.5 w-2.5 rounded-[3px] bg-zinc-100" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

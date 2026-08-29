@@ -8,20 +8,30 @@ const KEYWORD_HINTS: Record<string, string[]> = {
   salud: ["farmacia", "doctor", "gym", "gimnasio"],
 };
 
+const CURRENCY_RE = /\b(USD|COP|MXN|EUR|ARS|CLP|PEN|BRL|GBP)\b/i;
+
 export function parseQuickEntry(input: string): {
   amount: number | null;
   description: string;
+  currency: string | null;
 } {
   const trimmed = input.trim();
-  if (!trimmed) return { amount: null, description: "" };
+  if (!trimmed) return { amount: null, description: "", currency: null };
+
+  const currencyMatch = trimmed.match(CURRENCY_RE);
+  const currency = currencyMatch ? currencyMatch[1].toUpperCase() : null;
 
   const amountMatch =
     trimmed.match(
-      /(?:^|\s)\$?\s*(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:usd|mxn|eur|cop)?(?:\s|$)/i,
+      /(?:^|\s)\$?\s*(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(?:usd|mxn|eur|cop|ars|clp|pen|brl|gbp)?(?:\s|$)/i,
     ) ?? null;
 
   if (!amountMatch) {
-    return { amount: null, description: trimmed };
+    return {
+      amount: null,
+      description: trimmed.replace(CURRENCY_RE, " ").replace(/\s+/g, " ").trim(),
+      currency,
+    };
   }
 
   let raw = amountMatch[1];
@@ -35,6 +45,7 @@ export function parseQuickEntry(input: string): {
   const amount = Number.parseFloat(raw);
   const description = trimmed
     .replace(amountMatch[0], " ")
+    .replace(CURRENCY_RE, " ")
     .replace(/\ben\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -42,6 +53,7 @@ export function parseQuickEntry(input: string): {
   return {
     amount: Number.isFinite(amount) && amount > 0 ? amount : null,
     description: description || "Gasto",
+    currency,
   };
 }
 
