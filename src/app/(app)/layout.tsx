@@ -31,6 +31,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const accounts = (accountRows ?? []).map((a) => ({
     value: a.id,
     label: `${a.name} (${a.currency})`,
+    currency: a.currency,
   }));
 
   const categories = (categoryRows ?? []).map((c) => ({
@@ -43,6 +44,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       displayName={profile?.display_name ?? user.email ?? "Usuario"}
       accounts={accounts}
       categories={categories}
+      baseCurrency={profile?.base_currency ?? "USD"}
     >
       {children}
     </AppShell>

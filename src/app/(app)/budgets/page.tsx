@@ -46,7 +46,7 @@ export default async function BudgetsPage() {
       }))}
       expenseCategories={categories ?? []}
       spentByCategory={spentByCategory}
-      periodLabel={`${period.month}/${period.year}`}
+      periodLabel={`${period.month}/${period.year} · este mes`}
     />
   );
 }

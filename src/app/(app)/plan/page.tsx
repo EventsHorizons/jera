@@ -22,6 +22,11 @@ const PLAN_ITEMS = [
     title: "Recurrentes",
     description: "Ingresos y gastos que se repiten.",
   },
+  {
+    href: "/achievements",
+    title: "Progreso",
+    description: "Racha, medallas, nivel y cohorte anónima.",
+  },
 ] as const;
 
 export default function PlanPage() {

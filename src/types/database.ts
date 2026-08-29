@@ -29,10 +29,14 @@ export type Database = {
           id: string;
           display_name: string;
           timezone: string;
+          base_currency: string;
           status: "active" | "suspended";
           onboarding_completed: boolean;
           terms_accepted_at: string;
           terms_version: string;
+          cohort_opt_in: boolean;
+          health_score: number;
+          health_updated_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -40,16 +44,24 @@ export type Database = {
           id: string;
           display_name: string;
           timezone?: string;
+          base_currency?: string;
           status?: "active" | "suspended";
           onboarding_completed?: boolean;
           terms_accepted_at: string;
           terms_version?: string;
+          cohort_opt_in?: boolean;
+          health_score?: number;
+          health_updated_at?: string | null;
         };
         Update: {
           display_name?: string;
           timezone?: string;
+          base_currency?: string;
           status?: "active" | "suspended";
           onboarding_completed?: boolean;
+          cohort_opt_in?: boolean;
+          health_score?: number;
+          health_updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -374,6 +386,222 @@ export type Database = {
           transaction_id: string;
         };
         Update: Record<string, never>;
+        Relationships: [];
+      };
+      user_streaks: {
+        Row: {
+          user_id: string;
+          current_streak: number;
+          longest_streak: number;
+          last_qualified_on: string | null;
+          freeze_tokens: number;
+          milestones_claimed: number[];
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          current_streak?: number;
+          longest_streak?: number;
+          last_qualified_on?: string | null;
+          freeze_tokens?: number;
+          milestones_claimed?: number[];
+        };
+        Update: {
+          current_streak?: number;
+          longest_streak?: number;
+          last_qualified_on?: string | null;
+          freeze_tokens?: number;
+          milestones_claimed?: number[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      streak_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          occurred_on: string;
+          kind: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          occurred_on: string;
+          kind: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      user_progress: {
+        Row: {
+          user_id: string;
+          xp_total: number;
+          level: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          xp_total?: number;
+          level?: number;
+        };
+        Update: {
+          xp_total?: number;
+          level?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      xp_ledger: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount: number;
+          reason: string;
+          ref_id: string | null;
+          day: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          amount: number;
+          reason: string;
+          ref_id?: string | null;
+          day: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      insight_stories: {
+        Row: {
+          id: string;
+          user_id: string;
+          kind: string;
+          title: string;
+          body: string;
+          payload: Json;
+          created_on: string;
+          read_at: string | null;
+          expires_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          kind: string;
+          title: string;
+          body: string;
+          payload?: Json;
+          created_on?: string;
+          read_at?: string | null;
+          expires_at?: string | null;
+        };
+        Update: {
+          read_at?: string | null;
+        };
+        Relationships: [];
+      };
+      achievements: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          sort_order: number;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          description: string;
+          sort_order?: number;
+        };
+        Update: {
+          name?: string;
+          description?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      user_achievements: {
+        Row: {
+          user_id: string;
+          achievement_id: string;
+          unlocked_at: string;
+        };
+        Insert: {
+          user_id: string;
+          achievement_id: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      notification_prefs: {
+        Row: {
+          user_id: string;
+          streak_alerts: boolean;
+          budget_alerts: boolean;
+          insight_alerts: boolean;
+          cohort_alerts: boolean;
+          quiet_hours: boolean;
+          muted_streak_until: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          streak_alerts?: boolean;
+          budget_alerts?: boolean;
+          insight_alerts?: boolean;
+          cohort_alerts?: boolean;
+          quiet_hours?: boolean;
+          muted_streak_until?: string | null;
+        };
+        Update: {
+          streak_alerts?: boolean;
+          budget_alerts?: boolean;
+          insight_alerts?: boolean;
+          cohort_alerts?: boolean;
+          quiet_hours?: boolean;
+          muted_streak_until?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      notification_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          notif_id: string;
+          channel: string;
+          day: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          notif_id: string;
+          channel?: string;
+          day?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      in_app_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          notif_id: string;
+          title: string;
+          body: string;
+          href: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          notif_id: string;
+          title: string;
+          body: string;
+          href?: string | null;
+        };
+        Update: {
+          read_at?: string | null;
+        };
         Relationships: [];
       };
     };

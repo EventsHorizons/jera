@@ -62,6 +62,12 @@ export const profileSchema = z.object({
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(80, "El nombre no puede superar 80 caracteres"),
   timezone: z.string().min(1, "La zona horaria es obligatoria"),
+  baseCurrency: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .length(3, "Moneda inválida")
+    .regex(/^[A-Z]{3}$/, "Moneda inválida"),
 });
 
 export const deleteAccountSchema = z.object({

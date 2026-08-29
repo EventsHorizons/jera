@@ -8,6 +8,7 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BASE_CURRENCIES } from "@/lib/finance/currencies";
 
 import type { ActionState } from "@/lib/utils/errors";
 
@@ -49,14 +50,26 @@ export function OnboardingForm() {
             <option value="other">Otro</option>
           </select>
         </label>
-        <Input
-          name="currency"
-          label="Moneda"
-          defaultValue="USD"
-          maxLength={3}
-          required
-          error={state.fieldErrors?.currency?.[0]}
-        />
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium text-text-secondary">Moneda</span>
+          <select
+            name="currency"
+            className="h-10 rounded-lg border border-border bg-surface px-3 text-text"
+            defaultValue="USD"
+          >
+            {BASE_CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-text-muted">
+            También será tu moneda base en el resumen (puedes cambiarla en Ajustes).
+          </span>
+          {state.fieldErrors?.currency?.[0] ? (
+            <span className="text-xs text-danger">{state.fieldErrors.currency[0]}</span>
+          ) : null}
+        </label>
         <Input
           name="initialBalance"
           label="Saldo inicial"

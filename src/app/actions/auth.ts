@@ -455,6 +455,7 @@ export async function updateProfileAction(
   const parsed = profileSchema.safeParse({
     displayName: formData.get("displayName"),
     timezone: formData.get("timezone"),
+    baseCurrency: formData.get("baseCurrency"),
   });
 
   if (!parsed.success) {
@@ -478,6 +479,7 @@ export async function updateProfileAction(
     .update({
       display_name: parsed.data.displayName,
       timezone: parsed.data.timezone,
+      base_currency: parsed.data.baseCurrency,
     })
     .eq("id", user.id);
 
@@ -583,7 +585,10 @@ export async function createFirstAccountAction(
 
   await supabase
     .from("profiles")
-    .update({ onboarding_completed: true })
+    .update({
+      onboarding_completed: true,
+      base_currency: parsed.data.currency.toUpperCase(),
+    })
     .eq("id", user.id);
 
   redirect("/dashboard");

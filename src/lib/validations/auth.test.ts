@@ -134,17 +134,26 @@ describe("changePasswordSchema", () => {
 });
 
 describe("profileSchema", () => {
-  it("validates display name and timezone", () => {
+  it("validates display name, timezone and base currency", () => {
     expect(
       profileSchema.safeParse({
         displayName: "Ana",
         timezone: "America/Bogota",
+        baseCurrency: "COP",
       }).success,
     ).toBe(true);
     expect(
       profileSchema.safeParse({
         displayName: "A",
         timezone: "UTC",
+        baseCurrency: "USD",
+      }).success,
+    ).toBe(false);
+    expect(
+      profileSchema.safeParse({
+        displayName: "Ana",
+        timezone: "UTC",
+        baseCurrency: "US",
       }).success,
     ).toBe(false);
   });

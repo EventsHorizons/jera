@@ -29,9 +29,11 @@ type Debt = {
 export function DebtsClient({
   debts,
   accounts,
+  baseCurrency = "USD",
 }: {
   debts: Debt[];
   accounts: Array<{ id: string; name: string }>;
+  baseCurrency?: string;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -71,15 +73,15 @@ export function DebtsClient({
                       <p className="text-sm text-text-muted">{debt.creditor}</p>
                     ) : null}
                     <p className="fc-amount mt-2 text-2xl font-semibold text-text">
-                      {formatMoney(pending)}
+                      {formatMoney(pending, baseCurrency)}
                       <span className="text-base font-normal text-text-muted">
                         {" "}
                         pendiente
                       </span>
                     </p>
                     <p className="mt-1 text-sm text-text-secondary">
-                      Pagado {formatMoney(Number(debt.paid_amount))} de{" "}
-                      {formatMoney(Number(debt.original_amount))}
+                      Pagado {formatMoney(Number(debt.paid_amount), baseCurrency)} de{" "}
+                      {formatMoney(Number(debt.original_amount), baseCurrency)}
                     </p>
                     {debt.next_payment_date ? (
                       <p className="mt-1 text-sm text-text-muted">

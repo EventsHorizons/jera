@@ -1,16 +1,19 @@
 import { BalanceCard } from "@/components/finance/balance-card";
-import { QuickEntryBar } from "@/components/finance/quick-entry-bar";
+import { ExpenseCaptureButton } from "@/components/finance/expense-capture";
+import { GamificationHud } from "@/components/finance/gamification-hud";
+import { InAppNotificationBanner } from "@/components/finance/in-app-notification-banner";
+import { InsightStories } from "@/components/finance/insight-stories";
 import { SpendingTrend } from "@/components/finance/spending-trend";
-import { requireUser } from "@/lib/auth/session";
+import { seedStreakRiskNotification } from "@/app/actions/gamification";
+import { getProfile, requireUser } from "@/lib/auth/session";
 import {
   addDaysToISODate,
-  calculateAvailableMoney,
-  calculateExpenses,
-  calculateIncome,
   currentMonthPeriod,
   formatMoney,
-  formatMoneyMap,
 } from "@/lib/finance/calculations";
+import { convertAmount, fetchUsdRates } from "@/lib/finance/fx";
+import { levelFromXp, todayInTimezone } from "@/lib/finance/gamification";
+import { recalculateHealth } from "@/lib/finance/gamification-service";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -40,50 +43,53 @@ function formatDayLabel(iso: string) {
 
 export default async function DashboardPage() {
   const { user } = await requireUser();
+  const profile = await getProfile(user.id);
   const supabase = await createClient();
   const period = currentMonthPeriod();
   const today = new Date().toISOString().slice(0, 10);
+  const baseCurrency = (profile?.base_currency ?? "USD").toUpperCase();
+  const tz = profile?.timezone ?? "UTC";
+  const localToday = todayInTimezone(tz);
 
   await supabase.rpc("generate_due_recurring_transactions", { p_as_of: today });
+  await seedStreakRiskNotification(user.id).catch(() => undefined);
+  // Soft refresh health if stale (>12h) or null
+  if (
+    !profile?.health_updated_at ||
+    Date.now() - new Date(profile.health_updated_at).getTime() > 12 * 3600_000
+  ) {
+    await recalculateHealth(supabase, user.id, tz).catch(() => undefined);
+  }
 
   const [
-    { data: accountRows },
-    { data: categoryRows },
     { data: accounts },
     { data: monthTx },
     { data: recentTx },
     { data: weekTx },
     { data: todayTx },
+    { data: streakRow },
+    { data: progressRow },
+    { data: stories },
+    { data: notifs },
+    { data: freshProfile },
   ] = await Promise.all([
-    supabase
-      .from("financial_accounts")
-      .select("id, name, currency")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("name"),
-    supabase
-      .from("categories")
-      .select("id, name")
-      .eq("user_id", user.id)
-      .eq("kind", "expense")
-      .order("name"),
     supabase.rpc("get_accounts_with_balance"),
     supabase
       .from("transactions")
-      .select("type, amount, is_settlement, reimburses_transaction_id, category_id")
+      .select("type, amount, is_settlement, reimburses_transaction_id, category_id, account_id")
       .eq("user_id", user.id)
       .gte("occurred_on", period.start)
       .lt("occurred_on", period.endExclusive),
     supabase
       .from("transactions")
-      .select("id, type, amount, occurred_on, description, categories(name)")
+      .select("id, type, amount, occurred_on, description, account_id, categories(name)")
       .eq("user_id", user.id)
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(20),
     supabase
       .from("transactions")
-      .select("amount, occurred_on")
+      .select("amount, occurred_on, account_id")
       .eq("user_id", user.id)
       .eq("type", "expense")
       .eq("is_settlement", false)
@@ -91,41 +97,77 @@ export default async function DashboardPage() {
       .lte("occurred_on", today),
     supabase
       .from("transactions")
-      .select("amount")
+      .select("amount, account_id")
       .eq("user_id", user.id)
       .eq("type", "expense")
       .eq("is_settlement", false)
       .eq("occurred_on", today),
+    supabase.from("user_streaks").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("user_progress").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase
+      .from("insight_stories")
+      .select("id, title, body, kind")
+      .eq("user_id", user.id)
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("in_app_notifications")
+      .select("id, title, body, href")
+      .eq("user_id", user.id)
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("profiles")
+      .select("health_score")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
 
-  const quickAccounts = (accountRows ?? []).map((a) => ({
-    value: a.id,
-    label: a.name,
-  }));
-  const quickCategories = (categoryRows ?? []).map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
+  const levelInfo = levelFromXp(progressRow?.xp_total ?? 0);
 
   const activeAccounts = (accounts ?? []).filter((a) => a.status === "active");
   const hasAccounts = activeAccounts.length > 0;
-  const availableByCurrency = calculateAvailableMoney(activeAccounts);
-  const primaryCurrency =
-    Object.keys(availableByCurrency)[0] ?? activeAccounts[0]?.currency ?? "USD";
+  const currencyByAccount = new Map(
+    (accounts ?? []).map((a) => [a.id, a.currency] as const),
+  );
 
-  const txRows = (monthTx ?? []).map((t) => ({
-    type: t.type,
-    amount: Number(t.amount),
-    account_id: null,
-    counterparty_account_id: null,
-    is_settlement: t.is_settlement,
-    reimburses_transaction_id: t.reimburses_transaction_id,
-    category_id: t.category_id,
-  }));
+  const currencies = new Set<string>([baseCurrency]);
+  for (const a of activeAccounts) currencies.add(a.currency);
 
-  const monthIncome = calculateIncome(txRows);
-  const monthExpense = calculateExpenses(txRows);
-  const todayExpense = (todayTx ?? []).reduce((sum, t) => sum + Number(t.amount), 0);
+  let rates: Record<string, number> = {};
+  try {
+    rates = await fetchUsdRates([...currencies]);
+  } catch {
+    rates = {};
+  }
+
+  const currencyOf = (accountId: string | null) =>
+    (accountId ? currencyByAccount.get(accountId) : undefined) ?? baseCurrency;
+
+  const toBase = (amount: number, currency: string) =>
+    convertAmount(amount, currency, baseCurrency, rates);
+
+  const availableBase = activeAccounts.reduce(
+    (sum, a) => sum + toBase(Number(a.current_balance), a.currency),
+    0,
+  );
+
+  const monthIncome = (monthTx ?? []).reduce((sum, t) => {
+    if (t.type !== "income" || t.is_settlement) return sum;
+    return sum + toBase(Number(t.amount), currencyOf(t.account_id));
+  }, 0);
+
+  const monthExpense = (monthTx ?? []).reduce((sum, t) => {
+    if (t.type !== "expense" || t.is_settlement) return sum;
+    return sum + toBase(Number(t.amount), currencyOf(t.account_id));
+  }, 0);
+
+  const todayExpense = (todayTx ?? []).reduce(
+    (sum, t) => sum + toBase(Number(t.amount), currencyOf(t.account_id)),
+    0,
+  );
 
   const trendDays: string[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -138,7 +180,10 @@ export default async function DashboardPage() {
   for (const day of trendDays) spendByDay.set(day, 0);
   for (const tx of weekTx ?? []) {
     const key = tx.occurred_on as string;
-    spendByDay.set(key, (spendByDay.get(key) ?? 0) + Number(tx.amount));
+    spendByDay.set(
+      key,
+      (spendByDay.get(key) ?? 0) + toBase(Number(tx.amount), currencyOf(tx.account_id)),
+    );
   }
 
   const trendPoints = trendDays.map((day) => ({
@@ -153,21 +198,38 @@ export default async function DashboardPage() {
     grouped.get(day)!.push(tx);
   }
 
+  const monthLabel = new Date(`${period.start}T12:00:00`).toLocaleDateString("es", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="fc-bento-grid">
       <div className="col-span-12 space-y-6 lg:col-span-8">
-        <header className="space-y-2">
-          <h1 className="fc-page-title text-lg md:text-xl">Resumen</h1>
-          <p className="text-sm leading-relaxed text-text-secondary">
-            Tu estado financiero de un vistazo.
-          </p>
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="fc-page-title text-lg md:text-xl">Inicio</h1>
+            <p className="text-sm leading-relaxed text-text-secondary">
+              Impacto de {monthLabel} en {baseCurrency}.
+            </p>
+          </div>
+          <ExpenseCaptureButton className="hidden sm:inline-flex" />
         </header>
 
-        <QuickEntryBar
-          accounts={quickAccounts}
-          categories={quickCategories}
-          className="hidden sm:block"
+        <InAppNotificationBanner items={notifs ?? []} />
+
+        <GamificationHud
+          streak={streakRow?.current_streak ?? 0}
+          freezeTokens={streakRow?.freeze_tokens ?? 0}
+          qualifiedToday={streakRow?.last_qualified_on === localToday}
+          healthScore={Number(freshProfile?.health_score ?? profile?.health_score ?? 50)}
+          xpTotal={progressRow?.xp_total ?? 0}
+          level={levelInfo.level}
+          levelName={levelInfo.name}
+          nextXp={levelInfo.nextXp}
         />
+
+        <InsightStories stories={stories ?? []} />
 
         {!hasAccounts ? (
           <div className="fc-empty py-10 text-center">
@@ -183,26 +245,26 @@ export default async function DashboardPage() {
           <>
             <div className="fc-metric-grid">
               <BalanceCard
-                label="Balance actual"
-                value={formatMoneyMap(availableByCurrency, primaryCurrency)}
+                label="Disponible"
+                value={formatMoney(availableBase, baseCurrency)}
                 icon={Wallet}
               />
               <BalanceCard
-                label="Gastos del mes"
-                value={formatMoney(monthExpense, primaryCurrency)}
-                subtitle={`Hoy: ${formatMoney(todayExpense, primaryCurrency)}`}
+                label="Gastaste este mes"
+                value={formatMoney(monthExpense, baseCurrency)}
+                subtitle={`Hoy: ${formatMoney(todayExpense, baseCurrency)}`}
                 icon={ArrowUpRight}
                 tone="expense"
               />
               <BalanceCard
                 label="Ingresos del mes"
-                value={formatMoney(monthIncome, primaryCurrency)}
+                value={formatMoney(monthIncome, baseCurrency)}
                 icon={ArrowDownLeft}
                 tone="income"
               />
             </div>
 
-            <SpendingTrend points={trendPoints} currency={primaryCurrency} />
+            <SpendingTrend points={trendPoints} currency={baseCurrency} />
           </>
         )}
       </div>
@@ -218,7 +280,7 @@ export default async function DashboardPage() {
 
           {(recentTx ?? []).length === 0 ? (
             <p className="text-sm text-text-muted">
-              Sin movimientos. Usa la barra inferior o{" "}
+              Sin movimientos. Pulsa + o{" "}
               <kbd className="rounded-lg border border-border/80 px-2 py-1 font-mono text-xs">
                 ⌘K
               </kbd>
@@ -267,7 +329,10 @@ export default async function DashboardPage() {
                               }`}
                             >
                               {isExpense ? "−" : isIncome ? "+" : ""}
-                              {formatMoney(Number(tx.amount), primaryCurrency)}
+                              {formatMoney(
+                                toBase(Number(tx.amount), currencyOf(tx.account_id)),
+                                baseCurrency,
+                              )}
                             </span>
                           </Link>
                         </li>

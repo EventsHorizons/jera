@@ -302,10 +302,21 @@ export async function createIncomeExpenseAction(
 
   if (error) return { error: "No se pudo registrar el movimiento." };
 
+  const { afterTransactionGamification } = await import(
+    "@/app/actions/gamification"
+  );
+  let xpNote = "";
+  try {
+    const g = await afterTransactionGamification(user.id);
+    if (g.xpAwarded > 0) xpNote = ` · +${g.xpAwarded} XP`;
+  } catch (e) {
+    console.error("gamification", e);
+  }
+
   revalidateFinance();
 
   if (formData.get("_quick") === "1") {
-    return { success: "Movimiento registrado." };
+    return { success: `Movimiento registrado${xpNote}.` };
   }
 
   redirect("/transactions");
@@ -944,6 +955,22 @@ export async function contributeGoalAction(
 
   if (contribError) return { error: "No se pudo registrar el aporte." };
 
+  try {
+    const { awardXp } = await import("@/lib/finance/gamification-service");
+    const { evaluateGoalAchievement } = await import("@/app/actions/gamification");
+    const { todayInTimezone } = await import("@/lib/finance/gamification");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("timezone")
+      .eq("id", user.id)
+      .single();
+    const day = todayInTimezone(profile?.timezone ?? "UTC");
+    await awardXp(supabase, user.id, "goal_contribute", day);
+    await evaluateGoalAchievement(user.id, goal.id);
+  } catch (e) {
+    console.error("goal gamification", e);
+  }
+
   // current_amount + status synced by DB trigger from contributions
   revalidateFinance();
   return { success: "Aporte registrado." };
@@ -1081,7 +1108,7 @@ export async function payDebtAction(
 
   if (!parsed.success) return mapZodErrors(parsed.error);
 
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
 
   const { error } = await supabase.rpc("pay_debt", {
     p_debt_id: parsed.data.debtId,
@@ -1106,6 +1133,26 @@ export async function payDebtAction(
       return { error: "Selecciona una cuenta de activo para pagar." };
     }
     return { error: "No se pudo registrar el pago." };
+  }
+
+  try {
+    const { awardXp } = await import("@/lib/finance/gamification-service");
+    const { evaluateDebtAchievement } = await import("@/app/actions/gamification");
+    const { todayInTimezone } = await import("@/lib/finance/gamification");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("timezone")
+      .eq("id", user.id)
+      .single();
+    await awardXp(
+      supabase,
+      user.id,
+      "debt_pay",
+      todayInTimezone(profile?.timezone ?? "UTC"),
+    );
+    await evaluateDebtAchievement(user.id);
+  } catch (e) {
+    console.error("debt gamification", e);
   }
 
   revalidateFinance();

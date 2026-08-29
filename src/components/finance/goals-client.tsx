@@ -22,7 +22,13 @@ type Goal = {
   status: string;
 };
 
-export function GoalsClient({ goals }: { goals: Goal[] }) {
+export function GoalsClient({
+  goals,
+  baseCurrency = "USD",
+}: {
+  goals: Goal[];
+  baseCurrency?: string;
+}) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [contributeId, setContributeId] = useState<string | null>(null);
@@ -60,16 +66,16 @@ export function GoalsClient({ goals }: { goals: Goal[] }) {
                   <div>
                     <p className="font-medium text-text">{goal.name}</p>
                     <p className="fc-amount mt-1 text-2xl font-semibold">
-                      {formatMoney(Number(goal.current_amount))}
+                      {formatMoney(Number(goal.current_amount), baseCurrency)}
                       <span className="text-base font-normal text-text-muted">
                         {" "}
-                        / {formatMoney(Number(goal.target_amount))}
+                        / {formatMoney(Number(goal.target_amount), baseCurrency)}
                       </span>
                     </p>
                     <p className="mt-1 text-sm text-text-secondary">
                       {completed
                         ? "Meta completada"
-                        : `Faltan ${formatMoney(remaining)} · ${percent.toFixed(0)}%`}
+                        : `Faltan ${formatMoney(remaining, baseCurrency)} · ${percent.toFixed(0)}%`}
                       {goal.target_date ? ` · Objetivo ${goal.target_date}` : ""}
                     </p>
                   </div>
