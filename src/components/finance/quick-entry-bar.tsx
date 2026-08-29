@@ -8,21 +8,21 @@ import { ArrowUp, Check, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-const STORAGE_KEY = "fincontrol:last-expense";
+import { STORAGE_KEYS } from "@/lib/brand/constants";
 
 type Option = { value: string; label: string };
 
 function readDefaults(): { accountId?: string; categoryId?: string } {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.lastExpense) ?? "{}");
   } catch {
     return {};
   }
 }
 
 function writeDefaults(accountId: string, categoryId: string) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ accountId, categoryId }));
+  localStorage.setItem(STORAGE_KEYS.lastExpense, JSON.stringify({ accountId, categoryId }));
 }
 
 function hapticSuccess() {
@@ -42,7 +42,7 @@ export function QuickEntryBar({
   accounts: Option[];
   categories: Option[];
   className?: string;
-  variant?: "default" | "dock";
+  variant?: "default" | "dock" | "command";
   showHints?: boolean;
   onSuccess?: () => void;
 }) {
@@ -102,15 +102,18 @@ export function QuickEntryBar({
   }
 
   const isDock = variant === "dock";
+  const isCommand = variant === "command";
 
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("flex flex-col gap-2", className)}>
       <div
         className={cn(
-          "group flex items-center gap-2 border border-border/80 bg-surface transition-[border-color,box-shadow,transform]",
-          isDock ? "rounded-full px-3 py-2" : "rounded-xl px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,0.03)]",
-          success && "scale-[1.01] border-income/40",
-          "focus-within:border-zinc-300 focus-within:shadow-[0_0_0_3px_rgba(9,9,11,0.04)]",
+          "group flex h-11 items-center gap-2 border border-border/80 bg-surface transition-[border-color,box-shadow]",
+          isDock && "rounded-full px-4",
+          isCommand && "rounded-xl px-4",
+          !isDock && !isCommand && "rounded-xl px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
+          success && "border-income/40",
+          "focus-within:border-zinc-300 focus-within:shadow-[0_0_0_4px_rgba(9,9,11,0.04)]",
           disabled && "opacity-60",
         )}
       >
@@ -130,8 +133,10 @@ export function QuickEntryBar({
             }
           }}
           disabled={disabled || pending}
-          placeholder={isDock ? "Almuerzo $25…" : 'Ej. "Almuerzo $25" o "Uber 12.50"'}
-          className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
+          placeholder={
+            isDock ? "Almuerzo $25…" : 'Ej. "Almuerzo $25" o "Uber 12.50"'
+          }
+          className="min-w-0 flex-1 bg-transparent text-sm leading-none text-text outline-none placeholder:text-text-muted"
           aria-label="Registrar gasto rápido"
         />
         <button
@@ -139,8 +144,7 @@ export function QuickEntryBar({
           onClick={submit}
           disabled={disabled || pending || !input.trim()}
           className={cn(
-            "flex shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300",
-            isDock ? "h-10 w-10" : "h-9 w-9",
+            "fc-touch-target shrink-0 rounded-full bg-zinc-900 text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300",
             success && "bg-income hover:bg-income",
           )}
           aria-label="Guardar gasto"
@@ -152,9 +156,9 @@ export function QuickEntryBar({
           )}
         </button>
       </div>
-      {error ? <p className="text-xs text-expense px-1">{error}</p> : null}
+      {error ? <p className="px-1 text-xs text-expense">{error}</p> : null}
       {showHints && disabled ? (
-        <p className="text-xs text-text-muted px-1">
+        <p className="px-1 text-xs text-text-muted">
           Crea una cuenta y categoría para usar la entrada rápida.
         </p>
       ) : null}

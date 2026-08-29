@@ -154,11 +154,11 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="grid grid-cols-12 gap-6 lg:gap-8">
+    <div className="fc-bento-grid">
       <div className="col-span-12 space-y-6 lg:col-span-8">
-        <header className="space-y-1">
-          <h1 className="text-lg font-semibold tracking-tight text-text">Resumen</h1>
-          <p className="text-sm text-text-secondary">
+        <header className="space-y-2">
+          <h1 className="fc-page-title text-lg md:text-xl">Resumen</h1>
+          <p className="text-sm leading-relaxed text-text-secondary">
             Tu estado financiero de un vistazo.
           </p>
         </header>
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
         <QuickEntryBar
           accounts={quickAccounts}
           categories={quickCategories}
-          className="hidden md:block"
+          className="hidden sm:block"
         />
 
         {!hasAccounts ? (
@@ -175,17 +175,18 @@ export default async function DashboardPage() {
             <p className="mx-auto mt-2 max-w-sm text-sm text-text-secondary">
               Sin una cuenta no podemos calcular tu balance ni registrar movimientos.
             </p>
-            <Link href="/accounts" className="fc-btn-ai mt-5 inline-flex">
+            <Link href="/accounts" className="fc-btn-ai mt-6 inline-flex">
               Agregar cuenta
             </Link>
           </div>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="fc-bento-grid">
               <BalanceCard
                 label="Balance actual"
                 value={formatMoneyMap(availableByCurrency, primaryCurrency)}
                 icon={Wallet}
+                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
               <BalanceCard
                 label="Gastos del mes"
@@ -193,12 +194,14 @@ export default async function DashboardPage() {
                 subtitle={`Hoy: ${formatMoney(todayExpense, primaryCurrency)}`}
                 icon={ArrowUpRight}
                 tone="expense"
+                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
               <BalanceCard
                 label="Ingresos del mes"
                 value={formatMoney(monthIncome, primaryCurrency)}
                 icon={ArrowDownLeft}
                 tone="income"
+                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
             </div>
 
@@ -209,25 +212,27 @@ export default async function DashboardPage() {
 
       {hasAccounts ? (
         <section className="col-span-12 lg:col-span-4">
-          <div className="mb-3 flex items-center justify-between lg:sticky lg:top-20">
-            <h2 className="text-sm font-medium text-text">Actividad reciente</h2>
-            <Link href="/transactions" className="text-xs fc-link">
+          <div className="mb-4 flex items-baseline justify-between gap-4 lg:sticky lg:top-24">
+            <h2 className="text-sm font-medium leading-none text-text">Actividad reciente</h2>
+            <Link href="/transactions" className="text-xs leading-none fc-link">
               Ver todo →
             </Link>
           </div>
 
           {(recentTx ?? []).length === 0 ? (
             <p className="text-sm text-text-muted">
-              Sin movimientos. Usa la barra inferior o <kbd className="rounded border border-border/80 px-1 font-mono text-[10px]">⌘K</kbd>.
+              Sin movimientos. Usa la barra inferior o{" "}
+              <kbd className="rounded-lg border border-border/80 px-2 py-1 font-mono text-xs">
+                ⌘K
+              </kbd>
+              .
             </p>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-6">
               {[...grouped.entries()].slice(0, 4).map(([day, items]) => (
                 <div key={day}>
-                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                    {formatDayLabel(day)}
-                  </p>
-                  <ul className="divide-y divide-border/80 rounded-xl border border-border/80 bg-surface">
+                  <p className="fc-label mb-2">{formatDayLabel(day)}</p>
+                  <ul className="fc-list">
                     {items!.slice(0, 5).map((tx) => {
                       const isExpense = tx.type === "expense";
                       const isIncome = tx.type === "income";
@@ -235,10 +240,10 @@ export default async function DashboardPage() {
                         <li key={tx.id}>
                           <Link
                             href={`/transactions/${tx.id}`}
-                            className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-surface-muted/50"
+                            className="fc-list-row min-h-11"
                           >
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-text">
+                              <p className="truncate text-sm font-medium leading-none text-text">
                                 {tx.description ||
                                   (tx.categories as { name?: string } | null)?.name ||
                                   TYPE_LABELS[tx.type]}
@@ -246,17 +251,17 @@ export default async function DashboardPage() {
                               <span
                                 className={
                                   isIncome
-                                    ? "fc-badge-income mt-1"
+                                    ? "fc-badge-income mt-2 inline-flex"
                                     : isExpense
-                                      ? "fc-badge-expense mt-1"
-                                      : "mt-1 text-[11px] text-text-muted"
+                                      ? "fc-badge-expense mt-2 inline-flex"
+                                      : "mt-2 inline-flex text-xs text-text-muted"
                                 }
                               >
                                 {TYPE_LABELS[tx.type]}
                               </span>
                             </div>
                             <span
-                              className={`fc-mono-amount shrink-0 text-sm font-semibold ${
+                              className={`fc-mono-amount shrink-0 text-sm font-semibold leading-none ${
                                 isIncome
                                   ? "text-income"
                                   : isExpense

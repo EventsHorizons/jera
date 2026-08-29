@@ -58,15 +58,15 @@ export function BudgetsClient({
       />
 
       {budgets.length > 0 ? (
-        <div className="rounded-xl border border-border/80 bg-surface px-4 py-4">
-          <p className="text-xs font-medium text-text-secondary">Resumen del mes</p>
-          <p className="fc-mono-amount mt-2 text-2xl font-semibold tracking-tight">
+        <div className="fc-panel">
+          <p className="text-xs font-medium leading-none text-text-secondary">Resumen del mes</p>
+          <p className="fc-mono-amount mt-4 text-2xl font-semibold leading-none tracking-tight">
             {formatMoney(totalSpent)}{" "}
             <span className="text-base font-normal text-text-muted">
               de {formatMoney(totalLimit)}
             </span>
           </p>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
             <div
               className="h-full rounded-full bg-zinc-900 transition-all"
               style={{
@@ -95,10 +95,7 @@ export function BudgetsClient({
             const name = budget.categories?.name ?? "Categoría";
 
             return (
-              <article
-                key={budget.id}
-                className="rounded-xl border border-border/80 bg-surface px-4 py-4"
-              >
+              <article key={budget.id} className="fc-panel">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium text-text">{name}</p>
@@ -135,7 +132,7 @@ export function BudgetsClient({
                     </form>
                   </div>
                 </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
                   <div
                     className={`h-full rounded-full transition-all ${
                       over ? "bg-expense" : percent >= 80 ? "bg-warning" : "bg-zinc-900"

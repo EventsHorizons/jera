@@ -1,3 +1,5 @@
+import { LughLogo } from "@/components/brand/lugh-logo";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand/constants";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -25,7 +27,7 @@ export default async function HomePage({
   return (
     <div className="flex min-h-screen flex-col bg-background text-text">
       <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
-        <span className="text-lg font-semibold">FinControl</span>
+        <LughLogo size="md" />
         <div className="flex gap-3">
           <Link href="/login" className="text-sm text-text-secondary hover:text-text">
             Iniciar sesión
@@ -49,7 +51,7 @@ export default async function HomePage({
 
       <main className="mx-auto flex max-w-3xl flex-1 flex-col justify-center px-6 py-16">
         <h1 className="text-4xl font-semibold tracking-tight">
-          Control financiero personal, claro y privado
+          {APP_NAME} — {APP_TAGLINE.toLowerCase()}
         </h1>
         <p className="mt-4 text-lg text-text-secondary">
           Un lugar único para saber cuánto dinero tienes, dónde está, de dónde viene, en qué lo

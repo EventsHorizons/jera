@@ -1,3 +1,4 @@
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand/constants";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -13,9 +14,9 @@ const geistMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinControl — Control financiero personal",
+  title: `${APP_NAME} — ${APP_TAGLINE}`,
   description:
-    "Aplicación web de gestión y control financiero personal con datos privados y persistentes.",
+    "Lugh te ayuda a registrar gastos al instante, ver tu balance y mantener el control de tu dinero con claridad.",
 };
 
 export default function RootLayout({
@@ -28,7 +29,9 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background text-text">{children}</body>
+      <body className="min-h-dvh overflow-x-hidden bg-background text-text">
+        {children}
+      </body>
     </html>
   );
 }

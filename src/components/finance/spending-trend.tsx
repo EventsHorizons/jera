@@ -10,12 +10,16 @@ export function SpendingTrend({
   const max = Math.max(...points.map((p) => p.value), 1);
 
   return (
-    <div className="rounded-xl border border-border/80 bg-surface px-4 py-5">
-      <div className="mb-4 flex items-baseline justify-between">
-        <p className="text-xs font-medium text-text-secondary">Gastos — últimos 7 días</p>
-        <p className="text-[11px] text-text-muted">{currency}</p>
+    <div className="fc-panel">
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <p className="text-xs font-medium leading-none text-text-secondary">
+          Gastos — últimos 7 días
+        </p>
+        <p className="font-mono text-xs tabular-nums leading-none text-text-muted">
+          {currency}
+        </p>
       </div>
-      <div className="flex h-24 items-end gap-1.5">
+      <div className="flex h-24 items-end gap-2">
         {points.map((point) => {
           const height = Math.max((point.value / max) * 100, point.value > 0 ? 8 : 2);
           return (
@@ -27,7 +31,7 @@ export function SpendingTrend({
                   title={`${point.label}: ${point.value}`}
                 />
               </div>
-              <span className="text-[10px] text-text-muted">{point.label}</span>
+              <span className="text-xs leading-none text-text-muted">{point.label}</span>
             </div>
           );
         })}

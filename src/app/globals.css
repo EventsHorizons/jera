@@ -21,6 +21,11 @@
   --warning-soft: #fffbeb;
   --success: #10b981;
   --success-soft: #ecfdf5;
+  /* Layout tokens — 8px engine */
+  --fc-sidebar-w: 15rem; /* 240px */
+  --fc-sidebar-collapsed: 4rem; /* 64px */
+  --fc-mobile-nav-h: 3.5rem; /* 56px */
+  --fc-mobile-dock-h: 4rem; /* 64px */
 }
 
 @theme inline {
@@ -48,10 +53,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--text);
   font-family: var(--font-inter), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
 input,
@@ -62,32 +72,57 @@ button {
 }
 
 @layer components {
+  .fc-app-root {
+    @apply flex min-h-dvh overflow-x-hidden bg-background;
+  }
+
+  .fc-main {
+    @apply mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6 md:py-8;
+    padding-bottom: calc(
+      var(--fc-mobile-nav-h) + var(--fc-mobile-dock-h) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  @media (min-width: 640px) {
+    .fc-main {
+      padding-bottom: 2rem;
+    }
+  }
+
+  .fc-bento-grid {
+    @apply grid grid-cols-12 gap-4 md:gap-6;
+  }
+
+  .fc-panel {
+    @apply rounded-2xl border border-border/80 bg-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+  }
+
   .fc-card {
-    @apply rounded-xl border border-border/80 bg-surface;
+    @apply rounded-2xl border border-border/80 bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)];
   }
 
   .fc-card-muted {
-    @apply rounded-xl border border-dashed border-border/80 bg-surface-muted/50;
+    @apply rounded-2xl border border-dashed border-border/80 bg-surface-muted/50;
   }
 
   .fc-empty {
-    @apply rounded-xl border border-dashed border-border/80 bg-surface-muted/40 px-6;
+    @apply rounded-2xl border border-dashed border-border/80 bg-surface-muted/40 px-6 py-8;
   }
 
   .fc-section {
-    @apply space-y-3 border-b border-border/80 pb-8 last:border-b-0 last:pb-0;
+    @apply space-y-4 border-b border-border/80 pb-8 last:border-b-0 last:pb-0;
   }
 
   .fc-list {
-    @apply divide-y divide-border/80 overflow-hidden rounded-xl border border-border/80 bg-surface;
+    @apply divide-y divide-border/80 overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)];
   }
 
   .fc-list-row {
-    @apply flex items-center justify-between gap-4 px-4 py-3.5 transition-colors hover:bg-surface-muted/60;
+    @apply flex items-center justify-between gap-4 px-4 py-4 transition-colors hover:bg-surface-muted/60;
   }
 
   .fc-hero-amount {
-    @apply font-mono text-4xl font-semibold tabular-nums tracking-tight text-text sm:text-5xl;
+    @apply font-mono text-4xl font-semibold tabular-nums tracking-tight text-text md:text-5xl;
   }
 
   .fc-mono-amount {
@@ -99,11 +134,11 @@ button {
   }
 
   .fc-page-title {
-    @apply text-2xl font-semibold tracking-tight text-text sm:text-3xl;
+    @apply text-2xl font-semibold tracking-tight text-text md:text-3xl;
   }
 
   .fc-page-subtitle {
-    @apply mt-1 max-w-xl text-sm leading-relaxed text-text-secondary;
+    @apply mt-2 max-w-xl text-sm leading-relaxed text-text-secondary;
   }
 
   .fc-amount {
@@ -111,22 +146,34 @@ button {
   }
 
   .fc-label {
-    @apply text-[11px] font-medium uppercase tracking-wider text-text-muted;
+    @apply text-xs font-medium uppercase tracking-wider text-text-muted;
   }
 
   .fc-badge-income {
-    @apply inline-flex items-center rounded-full bg-income-soft px-2 py-0.5 text-[11px] font-medium text-income;
+    @apply inline-flex items-center rounded-full bg-income-soft px-2 py-1 text-xs font-medium text-income;
   }
 
   .fc-badge-expense {
-    @apply inline-flex items-center rounded-full bg-expense-soft px-2 py-0.5 text-[11px] font-medium text-expense;
+    @apply inline-flex items-center rounded-full bg-expense-soft px-2 py-1 text-xs font-medium text-expense;
   }
 
   .fc-btn-ai {
-    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-zinc-900 px-5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:bg-zinc-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-zinc-300;
+    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:bg-zinc-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-zinc-300;
   }
 
   .fc-btn-ai-secondary {
-    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border/80 bg-surface-muted px-5 text-sm font-medium text-text transition hover:bg-zinc-100 active:scale-[0.98];
+    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface-muted px-5 text-sm font-medium text-text transition hover:bg-zinc-100 active:scale-[0.98];
+  }
+
+  .fc-touch-target {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center;
+  }
+
+  .fc-mobile-dock {
+    bottom: calc(var(--fc-mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .fc-mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }

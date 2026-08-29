@@ -38,28 +38,28 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-[100] hidden items-start justify-center bg-zinc-900/20 px-4 pt-[15vh] backdrop-blur-sm md:flex"
+      className="fixed inset-0 z-[100] hidden items-start justify-center bg-zinc-900/20 px-4 pt-24 backdrop-blur-sm sm:flex"
       role="dialog"
       aria-modal="true"
       aria-label="Registrar gasto rápido"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-border/80 bg-surface p-2 shadow-xl"
+        className="fc-panel w-full max-w-lg p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-2 flex items-center justify-between px-2 pt-1">
+        <div className="mb-4 flex items-center justify-between gap-4 px-1">
           <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Command className="h-3.5 w-3.5" strokeWidth={1.75} />
+            <Command className="h-4 w-4" strokeWidth={1.75} />
             <span>Registrar gasto</span>
-            <kbd className="rounded-md border border-border/80 bg-surface-muted px-1.5 py-0.5 font-mono text-[10px]">
+            <kbd className="rounded-lg border border-border/80 bg-surface-muted px-2 py-1 font-mono text-xs">
               ⌘K
             </kbd>
           </div>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-full p-1.5 text-text-muted hover:bg-surface-muted hover:text-text"
+            className="fc-touch-target rounded-full text-text-muted hover:bg-surface-muted hover:text-text"
             aria-label="Cerrar"
           >
             <X className="h-4 w-4" strokeWidth={1.75} />
@@ -68,6 +68,7 @@ export function CommandPalette({
         <QuickEntryBar
           accounts={accounts}
           categories={categories}
+          variant="command"
           onSuccess={() => setOpen(false)}
           showHints={false}
         />

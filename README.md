@@ -1,6 +1,6 @@
-# FinControl
+# Lugh
 
-Aplicación web de control financiero personal.
+Control de gastos de uso diario — aplicación web personal.
 
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · Supabase Auth · PostgreSQL (RLS) · Zod · Vitest
 

@@ -165,10 +165,8 @@ export default async function TransactionsPage({
             <div className="space-y-6">
               {[...grouped.entries()].map(([day, items]) => (
                 <section key={day}>
-                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-text-muted">
-                    {formatDayLabel(day)}
-                  </p>
-                  <ul className="divide-y divide-border/80 rounded-xl border border-border/80 bg-surface">
+                  <p className="fc-label mb-2">{formatDayLabel(day)}</p>
+                  <ul className="fc-list">
                     {items!.map((tx) => {
                       const account = accountMap.get(tx.account_id ?? "");
                       const currency = account?.currency ?? "USD";
@@ -178,31 +176,31 @@ export default async function TransactionsPage({
                       const isIncome = tx.type === "income";
 
                       return (
-                        <li key={tx.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-surface-muted/50">
+                        <li key={tx.id} className="fc-list-row min-h-11 flex-wrap">
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-text">
+                            <p className="truncate text-sm font-medium leading-none text-text">
                               {tx.description || categoryName || TYPE_LABELS[tx.type]}
                             </p>
-                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
                               <span
                                 className={
                                   isIncome
                                     ? "fc-badge-income"
                                     : isExpense
                                       ? "fc-badge-expense"
-                                      : "text-[11px] text-text-muted"
+                                      : "text-xs text-text-muted"
                                 }
                               >
                                 {TYPE_LABELS[tx.type]}
                               </span>
                               {account ? (
-                                <span className="text-[11px] text-text-muted">{account.name}</span>
+                                <span className="text-xs text-text-muted">{account.name}</span>
                               ) : null}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <span
-                              className={`fc-mono-amount text-sm font-semibold ${
+                              className={`fc-mono-amount text-sm font-semibold leading-none ${
                                 isIncome
                                   ? "text-income"
                                   : isExpense
@@ -236,7 +234,7 @@ export default async function TransactionsPage({
           )}
 
           <Collapsible label="Gestionar categorías">
-            <div className="space-y-4 rounded-xl border border-border/80 bg-surface p-4 pt-2">
+            <div className="fc-panel space-y-4">
               <CategoryForm parents={rootCategories} />
               <CategoryList categories={categories ?? []} />
             </div>

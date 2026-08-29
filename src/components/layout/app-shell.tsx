@@ -1,5 +1,6 @@
 "use client";
 
+import { LughIcon, LughLogo } from "@/components/brand/lugh-logo";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileQuickEntryDock } from "@/components/layout/mobile-quick-entry-dock";
 import { QuickExpenseDialog } from "@/components/layout/quick-expense-dialog";
@@ -11,7 +12,6 @@ import {
   Menu,
   Receipt,
   Target,
-  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,14 +65,14 @@ export function AppShell({
   }, [menuOpen]);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="fc-app-root">
       <aside
         className={cn(
-          "hidden shrink-0 flex-col border-r border-border/80 bg-surface transition-[width] duration-200 md:flex",
-          sidebarCollapsed ? "w-[4.25rem]" : "w-52",
+          "hidden shrink-0 flex-col border-r border-border/80 bg-surface transition-[width] duration-200 sm:flex",
+          sidebarCollapsed ? "w-16" : "w-60",
         )}
       >
-        <div className="flex items-center justify-between border-b border-border/80 px-3 py-4">
+        <div className="flex h-16 items-center justify-between border-b border-border/80 px-4">
           <Link
             href="/dashboard"
             className={cn(
@@ -80,14 +80,19 @@ export function AppShell({
               sidebarCollapsed && "justify-center",
             )}
           >
-            <Wallet className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-            {!sidebarCollapsed ? <span>FinControl</span> : null}
+            {sidebarCollapsed ? (
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-white">
+                <LughIcon size="sm" />
+              </span>
+            ) : (
+              <LughLogo size="sm" />
+            )}
           </Link>
           {!sidebarCollapsed ? (
             <button
               type="button"
               onClick={() => setSidebarCollapsed(true)}
-              className="rounded-full p-1 text-text-muted hover:bg-surface-muted hover:text-text"
+              className="fc-touch-target rounded-full text-text-muted hover:bg-surface-muted hover:text-text"
               aria-label="Colapsar menú"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
@@ -98,14 +103,14 @@ export function AppShell({
           <button
             type="button"
             onClick={() => setSidebarCollapsed(false)}
-            className="mx-auto mt-2 rounded-full p-1.5 text-text-muted hover:bg-surface-muted"
+            className="fc-touch-target mx-auto mt-2 rounded-full text-text-muted hover:bg-surface-muted"
             aria-label="Expandir menú"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
           </button>
         ) : null}
         <nav className="flex-1 px-2 py-4">
-          <ul className="space-y-0.5">
+          <ul className="space-y-1">
             {NAV.map((item) => {
               const active = isActive(pathname, item.href);
               const Icon = item.icon;
@@ -115,11 +120,11 @@ export function AppShell({
                     href={item.href}
                     title={item.label}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors",
                       sidebarCollapsed && "justify-center px-2",
                       active
                         ? "bg-surface-muted font-medium text-text"
-                        : "text-text-secondary hover:bg-surface-muted/70 hover:text-text",
+                        : "text-text-secondary hover:bg-surface-muted hover:text-text",
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -130,20 +135,20 @@ export function AppShell({
             })}
           </ul>
           {!sidebarCollapsed ? (
-            <div className="mt-6 border-t border-border/80 pt-4">
-              <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-wider text-text-muted">
+            <div className="mt-8 border-t border-border/80 pt-4">
+              <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-text-muted">
                 Más
               </p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {SECONDARY_LINKS.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       className={cn(
-                        "block rounded-lg px-3 py-2 text-sm transition-colors",
+                        "flex min-h-11 items-center rounded-xl px-3 py-2 text-sm transition-colors",
                         isActive(pathname, item.href)
                           ? "bg-surface-muted font-medium text-text"
-                          : "text-text-secondary hover:bg-surface-muted/70 hover:text-text",
+                          : "text-text-secondary hover:bg-surface-muted hover:text-text",
                       )}
                     >
                       {item.label}
@@ -155,17 +160,16 @@ export function AppShell({
           ) : null}
         </nav>
         {!sidebarCollapsed ? (
-          <div className="border-t border-border/80 px-5 py-4">
+          <div className="border-t border-border/80 px-4 py-4">
             <p className="truncate text-sm font-medium text-text">{displayName}</p>
           </div>
         ) : null}
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-border/80 bg-surface/90 px-4 py-3 backdrop-blur sm:px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold md:hidden">
-            <Wallet className="h-4 w-4" strokeWidth={1.75} />
-            FinControl
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-hidden">
+        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b border-border/80 bg-surface/95 px-4 backdrop-blur sm:px-6">
+          <Link href="/dashboard" className="sm:hidden">
+            <LughLogo size="sm" />
           </Link>
           <button
             type="button"
@@ -174,30 +178,30 @@ export function AppShell({
                 new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
               );
             }}
-            className="hidden flex-1 items-center gap-2 rounded-full border border-border/80 bg-surface-muted/80 px-4 py-2 text-sm text-text-muted transition hover:bg-surface-muted md:flex md:max-w-md"
+            className="hidden h-11 flex-1 items-center gap-2 rounded-xl border border-border/80 bg-surface-muted px-4 text-sm text-text-muted transition hover:bg-surface-muted sm:flex lg:max-w-md"
           >
             <span>Registrar gasto…</span>
-            <kbd className="ml-auto rounded-md border border-border/80 bg-surface px-1.5 py-0.5 font-mono text-[10px]">
+            <kbd className="ml-auto rounded-lg border border-border/80 bg-surface px-2 py-1 font-mono text-xs">
               ⌘K
             </kbd>
           </button>
-          <div className="relative ml-auto flex items-center gap-2 md:ml-0" ref={menuRef}>
+          <div className="relative ml-auto flex items-center gap-2 sm:ml-0" ref={menuRef}>
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-surface-muted text-text-secondary hover:text-text md:hidden"
+              className="fc-touch-target rounded-xl border border-border/80 bg-surface-muted text-text-secondary hover:text-text sm:hidden"
               aria-label="Más opciones"
             >
-              <Menu className="h-4 w-4" strokeWidth={1.75} />
+              <Menu className="h-5 w-5" strokeWidth={1.75} />
             </button>
             {menuOpen ? (
-              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-xl border border-border/80 bg-surface py-1 shadow-lg md:hidden">
+              <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-border/80 bg-surface p-2 shadow-[0_4px_16px_rgba(0,0,0,0.08)] sm:hidden">
                 {SECONDARY_LINKS.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2 text-sm text-text-secondary hover:bg-surface-muted hover:text-text"
+                    className="flex min-h-11 items-center rounded-xl px-3 text-sm text-text-secondary hover:bg-surface-muted hover:text-text"
                   >
                     {item.label}
                   </Link>
@@ -221,15 +225,13 @@ export function AppShell({
           </div>
         ) : null}
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 pb-36 md:pb-8">
-          {children}
-        </main>
+        <main className="fc-main">{children}</main>
 
         <CommandPalette accounts={accounts} categories={categories} />
         <MobileQuickEntryDock accounts={accounts} categories={categories} />
 
-        <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-surface/95 backdrop-blur md:hidden">
-          <div className="mx-auto flex max-w-lg justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-1">
+        <nav className="fc-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-surface/95 backdrop-blur sm:hidden">
+          <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-2">
             {NAV.map((item) => {
               const Icon = item.icon;
               const active = isActive(pathname, item.href);
@@ -238,11 +240,11 @@ export function AppShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex min-w-[5rem] flex-col items-center gap-1 px-2 py-2 text-[10px] font-medium",
+                    "flex min-h-11 min-w-16 flex-1 flex-col items-center justify-center gap-1 px-2 text-xs font-medium",
                     active ? "text-text" : "text-text-muted",
                   )}
                 >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.75} />
+                  <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.75} />
                   {item.label}
                 </Link>
               );

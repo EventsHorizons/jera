@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { todayISODate } from "@/lib/finance/calculations";
+import { STORAGE_KEYS } from "@/lib/brand/constants";
 import type { ActionState } from "@/lib/utils/errors";
 
 const initialState: ActionState = {};
-const STORAGE_KEY = "fincontrol:last-expense";
 
 type Option = { value: string; label: string };
 type Defaults = { accountId?: string; categoryId?: string };
@@ -18,14 +18,14 @@ type Defaults = { accountId?: string; categoryId?: string };
 function readDefaults(): Defaults {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Defaults;
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.lastExpense) ?? "{}") as Defaults;
   } catch {
     return {};
   }
 }
 
 function writeDefaults(accountId: string, categoryId: string) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ accountId, categoryId }));
+  localStorage.setItem(STORAGE_KEYS.lastExpense, JSON.stringify({ accountId, categoryId }));
 }
 
 export function QuickExpenseForm({

@@ -4,7 +4,7 @@ import { QuickEntryBar } from "@/components/finance/quick-entry-bar";
 
 type Option = { value: string; label: string };
 
-/** Fixed thumb-zone entry bar — mobile only, sits above bottom nav. */
+/** Thumb-zone dock — mobile only, sits above bottom nav. */
 export function MobileQuickEntryDock({
   accounts,
   categories,
@@ -13,7 +13,7 @@ export function MobileQuickEntryDock({
   categories: Option[];
 }) {
   return (
-    <div className="fixed bottom-[calc(3.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 border-t border-border/80 bg-surface/95 px-3 py-2 backdrop-blur md:hidden">
+    <div className="fc-mobile-dock fixed left-0 right-0 z-50 border-t border-border/80 bg-surface/95 px-4 py-2 backdrop-blur sm:hidden">
       <QuickEntryBar
         accounts={accounts}
         categories={categories}

@@ -33,7 +33,7 @@ export function QuickExpenseDialog({
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)} className={cn("gap-1.5", className)}>
+      <Button type="button" onClick={() => setOpen(true)} className={cn("gap-2", className)}>
         + Agregar gasto
       </Button>
 
