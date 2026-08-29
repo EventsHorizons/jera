@@ -1,15 +1,15 @@
 /**
- * Lugh — AI-style dashboard shell (reference implementation).
+ * Jera — AI-style dashboard shell (reference implementation).
  * Used as design system reference; live UI is in dashboard/page.tsx + app-shell.tsx.
  */
-import { LughLogo } from "@/components/brand/lugh-logo";
+import { JeraLogo } from "@/components/brand/jera-logo";
 import { ArrowUp, Sparkles } from "lucide-react";
 
 export function AiDashboardShellExample() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#09090B]">
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-zinc-200/80 bg-white/90 px-6 py-3 backdrop-blur">
-        <LughLogo size="sm" />
+        <JeraLogo size="sm" />
         <button type="button" className="fc-btn-ai">
           + Agregar gasto
         </button>

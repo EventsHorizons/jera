@@ -1,8 +1,8 @@
 /**
- * Lugh — responsive grid + adaptive quick entry (mobile dock / desktop command).
+ * Jera — responsive grid + adaptive quick entry (mobile dock / desktop command).
  * Live implementation: app-shell.tsx, mobile-quick-entry-dock.tsx, command-palette.tsx
  */
-import { LughLogo } from "@/components/brand/lugh-logo";
+import { JeraLogo } from "@/components/brand/jera-logo";
 import { BalanceCard } from "@/components/finance/balance-card";
 import { QuickEntryBar } from "@/components/finance/quick-entry-bar";
 import { LayoutGrid, Receipt, Target, Wallet } from "lucide-react";
@@ -15,7 +15,7 @@ export function AdaptiveAppShellExample() {
     <div className="fc-app-root">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border/80 bg-surface sm:flex">
         <div className="flex h-16 items-center border-b border-border/80 px-4">
-          <LughLogo size="sm" />
+          <JeraLogo size="sm" />
         </div>
         <nav className="flex-1 space-y-1 px-2 py-4">
           {[
@@ -37,7 +37,7 @@ export function AdaptiveAppShellExample() {
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="flex h-16 items-center gap-4 border-b border-border/80 bg-surface px-4 sm:px-6">
           <div className="sm:hidden">
-            <LughLogo size="sm" />
+            <JeraLogo size="sm" />
           </div>
           <button
             type="button"

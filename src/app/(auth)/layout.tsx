@@ -1,4 +1,4 @@
-import { LughLogo } from "@/components/brand/lugh-logo";
+import { JeraLogo } from "@/components/brand/jera-logo";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-background text-text">
       <header className="border-b border-border bg-surface px-6 py-4">
         <Link href="/">
-          <LughLogo size="md" />
+          <JeraLogo size="md" />
         </Link>
       </header>
       <main className="flex flex-1 items-center justify-center px-6 py-12">

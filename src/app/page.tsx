@@ -1,4 +1,4 @@
-import { LughLogo } from "@/components/brand/lugh-logo";
+import { JeraLogo } from "@/components/brand/jera-logo";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand/constants";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -27,7 +27,7 @@ export default async function HomePage({
   return (
     <div className="flex min-h-screen flex-col bg-background text-text">
       <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
-        <LughLogo size="md" />
+        <JeraLogo size="md" />
         <div className="flex gap-3">
           <Link href="/login" className="text-sm text-text-secondary hover:text-text">
             Iniciar sesión

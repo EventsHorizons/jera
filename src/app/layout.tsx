@@ -16,7 +16,7 @@ const geistMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: `${APP_NAME} — ${APP_TAGLINE}`,
   description:
-    "Lugh te ayuda a registrar gastos al instante, ver tu balance y mantener el control de tu dinero con claridad.",
+    "Jera te ayuda a registrar gastos al instante, ver tu balance y mantener el control de tu dinero con claridad.",
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-# Lugh
+# Jera
 
 Control de gastos de uso diario — aplicación web personal.
 

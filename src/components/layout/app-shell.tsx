@@ -1,6 +1,6 @@
 "use client";
 
-import { LughIcon, LughLogo } from "@/components/brand/lugh-logo";
+import { JeraIcon, JeraLogo } from "@/components/brand/jera-logo";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileQuickEntryDock } from "@/components/layout/mobile-quick-entry-dock";
 import { QuickExpenseDialog } from "@/components/layout/quick-expense-dialog";
@@ -82,10 +82,10 @@ export function AppShell({
           >
             {sidebarCollapsed ? (
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-white">
-                <LughIcon size="sm" />
+                <JeraIcon size="sm" />
               </span>
             ) : (
-              <LughLogo size="sm" />
+              <JeraLogo size="sm" />
             )}
           </Link>
           {!sidebarCollapsed ? (
@@ -169,7 +169,7 @@ export function AppShell({
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b border-border/80 bg-surface/95 px-4 backdrop-blur sm:px-6">
           <Link href="/dashboard" className="sm:hidden">
-            <LughLogo size="sm" />
+            <JeraLogo size="sm" />
           </Link>
           <button
             type="button"
