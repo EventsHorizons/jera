@@ -1,6 +1,6 @@
 "use client";
 
-import { JeraIcon, JeraLogo } from "@/components/brand/jera-logo";
+import { JeraLogo, JeraMark } from "@/components/brand/jera-logo";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileQuickEntryDock } from "@/components/layout/mobile-quick-entry-dock";
 import { QuickExpenseDialog } from "@/components/layout/quick-expense-dialog";
@@ -81,8 +81,8 @@ export function AppShell({
             )}
           >
             {sidebarCollapsed ? (
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-white">
-                <JeraIcon size="sm" />
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                <JeraMark size="sm" />
               </span>
             ) : (
               <JeraLogo size="sm" />

@@ -1,8 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <rect width="32" height="32" rx="8" fill="#09090B"/>
-  <!-- Elder Futhark ᛃ (Jera) — geometric form -->
-  <g stroke="#FFFFFF" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M9 12.5 L16 6 L23 12.5 L16 19 Z"/>
-    <path d="M9 19.5 L16 13 L23 19.5 L16 26 Z"/>
-  </g>
+  <path d="M16 5L24 13.5L16 17L8 13.5L16 5Z" fill="#FFFFFF"/>
+  <path d="M16 15L24 18.5L16 27L8 18.5L16 15Z" fill="#FFFFFF"/>
 </svg>
