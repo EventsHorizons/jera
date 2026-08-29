@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   AUTH_RATE_LIMITS,
   rateLimit,
+  resetRateLimitsForKey,
 } from "@/lib/security/rate-limit";
 import {
   changePasswordSchema,
@@ -21,6 +22,7 @@ import {
   mapZodErrors,
   type ActionState,
 } from "@/lib/utils/errors";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -162,6 +164,7 @@ export async function registerAction(
     };
   }
 
+  revalidatePath("/", "layout");
   redirect("/onboarding");
 }
 
@@ -169,74 +172,137 @@ export async function loginAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
+  try {
+    const parsed = loginSchema.safeParse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
 
-  if (!parsed.success) {
-    return mapZodErrors(parsed.error);
+    if (!parsed.success) {
+      return mapZodErrors(parsed.error);
+    }
+
+    const email = parsed.data.email.toLowerCase().trim();
+    const ip = await clientIp();
+    const ipLimit = rateLimit(
+      `login:ip:${ip}`,
+      AUTH_RATE_LIMITS.login.limit,
+      AUTH_RATE_LIMITS.login.windowMs,
+    );
+    if (!ipLimit.ok) return rateLimitedMessage(ipLimit.retryAfterSeconds);
+
+    const emailLimit = rateLimit(
+      `login:email:${email}`,
+      AUTH_RATE_LIMITS.loginEmail.limit,
+      AUTH_RATE_LIMITS.loginEmail.windowMs,
+    );
+    if (!emailLimit.ok) return rateLimitedMessage(emailLimit.retryAfterSeconds);
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: parsed.data.password,
+    });
+
+    if (error) {
+      console.error("loginAction signIn", error.message, error.code);
+      return { error: authErrorMessage(error.message) };
+    }
+
+    if (!data.user || !data.session) {
+      return { error: "No se pudo iniciar sesión." };
+    }
+
+    // Ensure profile row exists (handles legacy users / failed signup triggers).
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("onboarding_completed, status")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("loginAction profile", profileError.message);
+    }
+
+    if (!profile) {
+      const displayName =
+        (data.user.user_metadata?.display_name as string | undefined)?.trim() ||
+        data.user.email?.split("@")[0] ||
+        "Usuario";
+      const { error: insertProfileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        display_name: displayName,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: "1.0",
+      });
+      if (insertProfileError) {
+        console.error("loginAction bootstrap profile", insertProfileError.message);
+        // Admin fallback if RLS blocks insert for edge cases.
+        try {
+          const admin = createAdminClient();
+          await admin.from("profiles").upsert({
+            id: data.user.id,
+            display_name: displayName,
+            terms_accepted_at: new Date().toISOString(),
+            terms_version: "1.0",
+          });
+        } catch (err) {
+          console.error("loginAction admin profile", err);
+          await supabase.auth.signOut({ scope: "local" });
+          return {
+            error:
+              "Tu usuario no tiene perfil. Contacta soporte o vuelve a registrarte.",
+          };
+        }
+      }
+    } else if (profile.status === "suspended") {
+      await supabase.auth.signOut({ scope: "global" });
+      return { error: "Tu cuenta está suspendida. Contacta soporte." };
+    }
+
+    resetRateLimitsForKey(`login:email:${email}`);
+    resetRateLimitsForKey(`login:ip:${ip}`);
+
+    // Critical for App Router: refresh cached layouts so middleware/session see cookies.
+    revalidatePath("/", "layout");
+
+    const next = formData.get("next");
+    const safeNext =
+      typeof next === "string" &&
+      next.startsWith("/") &&
+      !next.startsWith("//")
+        ? next
+        : null;
+
+    const onboardingDone = profile?.onboarding_completed === true;
+    redirect(safeNext ?? (onboardingDone ? "/dashboard" : "/onboarding"));
+  } catch (err) {
+    // redirect() throws a special Next.js error — rethrow it.
+    if (
+      err &&
+      typeof err === "object" &&
+      "digest" in err &&
+      typeof (err as { digest?: unknown }).digest === "string" &&
+      String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    console.error("loginAction unexpected", err);
+    return { error: "Ocurrió un error al iniciar sesión. Inténtalo de nuevo." };
   }
-
-  const email = parsed.data.email.toLowerCase();
-  const ip = await clientIp();
-  const ipLimit = rateLimit(
-    `login:ip:${ip}`,
-    AUTH_RATE_LIMITS.login.limit,
-    AUTH_RATE_LIMITS.login.windowMs,
-  );
-  if (!ipLimit.ok) return rateLimitedMessage(ipLimit.retryAfterSeconds);
-
-  const emailLimit = rateLimit(
-    `login:email:${email}`,
-    AUTH_RATE_LIMITS.loginEmail.limit,
-    AUTH_RATE_LIMITS.loginEmail.windowMs,
-  );
-  if (!emailLimit.ok) return rateLimitedMessage(emailLimit.retryAfterSeconds);
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password: parsed.data.password,
-  });
-
-  if (error) {
-    return { error: authErrorMessage(error.message) };
-  }
-
-  if (!data.user) {
-    return { error: "No se pudo iniciar sesión." };
-  }
-
-  const suspended = await assertActiveProfile(supabase, data.user.id);
-  if (suspended) return suspended;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", data.user.id)
-    .maybeSingle();
-
-  const next = formData.get("next");
-  const safeNext =
-    typeof next === "string" && next.startsWith("/") ? next : null;
-
-  if (!profile?.onboarding_completed) {
-    redirect(safeNext ?? "/onboarding");
-  }
-
-  redirect(safeNext ?? "/dashboard");
 }
 
 export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "local" });
+  revalidatePath("/", "layout");
   redirect("/login");
 }
 
 export async function logoutAllDevicesAction() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "global" });
+  revalidatePath("/", "layout");
   redirect("/login?message=Sesiones cerradas en todos los dispositivos");
 }
 

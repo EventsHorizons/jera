@@ -69,7 +69,9 @@ export async function middleware(request: NextRequest) {
 
   if (user && isAuthRoute(pathname)) {
     const url = request.nextUrl.clone();
+    // Don't force dashboard — let app layouts decide onboarding vs home.
     url.pathname = "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

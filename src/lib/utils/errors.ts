@@ -70,6 +70,16 @@ export function authErrorMessage(message: string): string {
     return "Tu sesión ha expirado. Inicia sesión nuevamente.";
   }
 
+  if (
+    normalized.includes("fetch failed") ||
+    normalized.includes("network") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("failed to fetch")
+  ) {
+    return "No hay conexión con el servidor de autenticación. ¿Está Supabase en marcha?";
+  }
+
   console.error("auth error (unmapped):", message);
   return "Ocurrió un error. Intenta nuevamente.";
 }

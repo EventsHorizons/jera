@@ -41,10 +41,15 @@ export function resetRateLimits() {
   buckets.clear();
 }
 
+/** Clear one key (e.g. after a successful login). */
+export function resetRateLimitsForKey(key: string) {
+  buckets.delete(key);
+}
+
 export const AUTH_RATE_LIMITS = {
-  register: { limit: 5, windowMs: 15 * 60 * 1000 },
-  login: { limit: 10, windowMs: 15 * 60 * 1000 },
-  loginEmail: { limit: 5, windowMs: 15 * 60 * 1000 },
-  forgotPassword: { limit: 3, windowMs: 15 * 60 * 1000 },
+  register: { limit: 8, windowMs: 15 * 60 * 1000 },
+  login: { limit: 20, windowMs: 15 * 60 * 1000 },
+  loginEmail: { limit: 12, windowMs: 15 * 60 * 1000 },
+  forgotPassword: { limit: 5, windowMs: 15 * 60 * 1000 },
   resendVerification: { limit: 3, windowMs: 60 * 60 * 1000 },
 } as const;
