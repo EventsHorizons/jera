@@ -1,50 +1,78 @@
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  CalendarClock,
+  ChevronRight,
+  PiggyBank,
+  Scale,
+  Target,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 
-const PLAN_ITEMS = [
+const PLAN_ITEMS: Array<{
+  href: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}> = [
   {
     href: "/budgets",
     title: "Presupuestos",
-    description: "Cuánto puedes gastar este mes por categoría.",
+    description: "Límites por categoría",
+    icon: Scale,
   },
   {
     href: "/goals",
     title: "Metas",
-    description: "Objetivos de ahorro y progreso.",
+    description: "Objetivos de ahorro",
+    icon: Target,
   },
   {
     href: "/debts",
     title: "Deudas",
-    description: "Pagos pendientes y vencimientos.",
+    description: "Compromisos pendientes",
+    icon: PiggyBank,
   },
   {
     href: "/recurring",
     title: "Recurrentes",
-    description: "Ingresos y gastos que se repiten.",
+    description: "Pagos que se repiten",
+    icon: CalendarClock,
   },
   {
     href: "/achievements",
-    title: "Progreso",
-    description: "Racha, medallas, nivel y cohorte anónima.",
+    title: "Hitos",
+    description: "Constancia y progreso",
+    icon: Trophy,
   },
-] as const;
+];
 
 export default function PlanPage() {
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Plan"
-        description="Organiza presupuestos, metas, deudas y pagos recurrentes."
-      />
-      <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
-        {PLAN_ITEMS.map((item) => (
-          <li key={item.href}>
-            <Link href={item.href} className="block px-5 py-4 hover:bg-surface-muted/40">
-              <p className="font-medium text-text">{item.title}</p>
-              <p className="mt-0.5 text-sm text-text-secondary">{item.description}</p>
-            </Link>
-          </li>
-        ))}
+      <PageHeader title="Plan" description="Presupuestos, metas y compromisos." />
+      <ul className="divide-y divide-border rounded-xl border border-border/80 bg-surface">
+        {PLAN_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="flex items-center gap-4 px-4 py-4 transition hover:bg-surface-muted/50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-text-secondary">
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <p className="font-medium text-text">{item.title}</p>
+                  <p className="text-sm text-text-secondary">{item.description}</p>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" strokeWidth={1.75} />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

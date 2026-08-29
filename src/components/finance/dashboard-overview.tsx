@@ -148,6 +148,7 @@ export function DashboardOverview({
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 loading={pending}
                 className="h-8 px-3 text-xs"
                 onClick={() => {
@@ -158,11 +159,14 @@ export function DashboardOverview({
                   });
                 }}
               >
-                Marcar revisión
+                Revisión
               </Button>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-xs"
               onClick={() => {
                 const detail = { handled: false };
                 document.dispatchEvent(
@@ -170,10 +174,9 @@ export function DashboardOverview({
                 );
                 if (!detail.handled) open();
               }}
-              className="h-8 rounded-md border border-zinc-200 px-3 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
             >
-              Agregar gasto · N
-            </button>
+              Gasto · N
+            </Button>
           </div>
           {msg ? <p className="mt-2 text-xs text-zinc-500">{msg}</p> : null}
         </div>

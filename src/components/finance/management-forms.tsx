@@ -21,6 +21,11 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DeleteFormAction,
+  EditAction,
+  RowActions,
+} from "@/components/ui/row-actions";
 import { Select } from "@/components/ui/select";
 import {
   currentMonthPeriod,
@@ -62,7 +67,7 @@ export function CategoryForm({
         ]}
       />
       <Button type="submit" loading={pending} variant="secondary">
-        Crear categoría
+        Crear
       </Button>
     </form>
   );
@@ -95,7 +100,7 @@ export function BudgetForm({
         <Input name="periodYear" label="Año" type="number" min={2000} defaultValue={period.year} required />
       </div>
       <Button type="submit" loading={pending}>
-        Crear presupuesto
+        Crear
       </Button>
     </form>
   );
@@ -112,7 +117,7 @@ export function GoalForm() {
       <Input name="targetAmount" label="Monto objetivo" type="number" step="0.01" min="0.01" required />
       <Input name="targetDate" label="Fecha objetivo (opcional)" type="date" />
       <Button type="submit" loading={pending}>
-        Crear meta
+        Crear
       </Button>
     </form>
   );
@@ -161,7 +166,7 @@ export function DebtForm({
       />
       <Input name="notes" label="Notas (opcional)" />
       <Button type="submit" loading={pending}>
-        Registrar deuda
+        Crear
       </Button>
     </form>
   );
@@ -241,27 +246,15 @@ export function CategoryList({
                 {c.name}
                 <span className="ml-2 text-xs text-text-muted">{c.kind}</span>
               </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="text-xs text-primary"
+              <RowActions>
+                <EditAction
+                  active={editId === c.id}
                   onClick={() => setEditId(editId === c.id ? null : c.id)}
-                >
-                  Editar
-                </button>
+                />
                 {!c.is_system ? (
-                  <form action={deleteAction}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <button
-                      type="submit"
-                      disabled={deleting}
-                      className="text-xs text-danger/80"
-                    >
-                      Eliminar
-                    </button>
-                  </form>
+                  <DeleteFormAction action={deleteAction} id={c.id} disabled={deleting} />
                 ) : null}
-              </div>
+              </RowActions>
             </div>
             {editId === c.id ? (
               <form action={updateAction} className="mt-2 flex gap-2">
@@ -339,7 +332,7 @@ export function BudgetEditForm({
         />
       </div>
       <Button type="submit" loading={pending} variant="secondary">
-        Guardar presupuesto
+        Guardar
       </Button>
     </form>
   );

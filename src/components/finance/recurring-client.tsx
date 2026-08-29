@@ -12,11 +12,14 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
+import { IconButton } from "@/components/ui/icon-button";
 import { PageHeader } from "@/components/ui/page-header";
+import { RowActions } from "@/components/ui/row-actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { todayISODate } from "@/lib/finance/calculations";
 import type { ActionState } from "@/lib/utils/errors";
+import { Pause, Play, Plus, RefreshCw, X } from "lucide-react";
 
 const initialState: ActionState = {};
 
@@ -69,17 +72,29 @@ export function RecurringClient({
     <div className="space-y-8">
       <PageHeader
         title="Recurrentes"
-        description="Salarios, alquiler, suscripciones y otros pagos que se repiten."
+        description="Pagos e ingresos que se repiten."
         action={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
             <form action={genAction}>
-              <Button type="submit" variant="secondary" loading={generating}>
-                Generar pendientes
-              </Button>
+              <IconButton
+                type="submit"
+                label="Generar pendientes"
+                variant="secondary"
+                disabled={generating}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${generating ? "animate-spin" : ""}`}
+                  strokeWidth={1.75}
+                />
+              </IconButton>
             </form>
-            <Button type="button" onClick={() => setCreateOpen(true)}>
-              Nueva
-            </Button>
+            <Button
+              type="button"
+              size="icon"
+              icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+              aria-label="Nueva recurrente"
+              onClick={() => setCreateOpen(true)}
+            />
           </div>
         }
       />
@@ -89,17 +104,17 @@ export function RecurringClient({
 
       {rules.length === 0 ? (
         <EmptyPanel
-          title="Sin operaciones recurrentes"
-          description="Registra tu salario, alquiler o suscripciones para saber qué viene pronto."
-          actionLabel="Crear recurrente"
+          title="Sin recurrentes"
+          description="Registra salario, alquiler o suscripciones."
+          actionLabel="Crear"
           onAction={() => setCreateOpen(true)}
         />
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-border rounded-xl border border-border/80 bg-surface">
           {rules.map((rule) => (
-            <li key={rule.id} className="py-4">
+            <li key={rule.id} className="px-4 py-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">
                     {rule.description || rule.type}
                   </p>
@@ -107,36 +122,35 @@ export function RecurringClient({
                     {Number(rule.amount).toFixed(2)}
                   </p>
                   <p className="text-sm text-text-muted">
-                    {FREQ[rule.frequency] ?? rule.frequency} · Próxima{" "}
-                    {rule.next_occurrence}
+                    {FREQ[rule.frequency] ?? rule.frequency} · {rule.next_occurrence}
                   </p>
                 </div>
-                <div className="flex gap-3 text-sm">
+                <RowActions>
                   {rule.status === "active" ? (
-                    <form action={pauseRecurringAction}>
+                    <form action={pauseRecurringAction} className="inline-flex">
                       <input type="hidden" name="id" value={rule.id} />
-                      <button type="submit" className="text-text-secondary hover:text-text">
-                        Pausar
-                      </button>
+                      <IconButton type="submit" label="Pausar" variant="ghost">
+                        <Pause className="h-4 w-4" strokeWidth={1.75} />
+                      </IconButton>
                     </form>
                   ) : null}
                   {rule.status === "paused" ? (
-                    <form action={resumeRecurringAction}>
+                    <form action={resumeRecurringAction} className="inline-flex">
                       <input type="hidden" name="id" value={rule.id} />
-                      <button type="submit" className="fc-link">
-                        Reanudar
-                      </button>
+                      <IconButton type="submit" label="Reanudar" variant="ghost">
+                        <Play className="h-4 w-4" strokeWidth={1.75} />
+                      </IconButton>
                     </form>
                   ) : null}
                   {rule.status !== "cancelled" ? (
-                    <form action={cancelRecurringAction}>
+                    <form action={cancelRecurringAction} className="inline-flex">
                       <input type="hidden" name="id" value={rule.id} />
-                      <button type="submit" className="text-text-muted hover:text-danger">
-                        Cancelar
-                      </button>
+                      <IconButton type="submit" label="Cancelar" variant="danger">
+                        <X className="h-4 w-4" strokeWidth={1.75} />
+                      </IconButton>
                     </form>
                   ) : null}
-                </div>
+                </RowActions>
               </div>
             </li>
           ))}
@@ -200,7 +214,7 @@ export function RecurringClient({
             defaultValue={todayISODate()}
             required
           />
-          <Input name="description" label="Nombre (opcional)" placeholder="Ej. Netflix, alquiler…" />
+          <Input name="description" label="Nombre" placeholder="Netflix, alquiler…" />
           <Button type="submit" loading={creating} className="w-full">
             Guardar
           </Button>

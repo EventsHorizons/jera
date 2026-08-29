@@ -12,7 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  ContributeAction,
+  DeleteFormAction,
+  EditAction,
+  RowActions,
+} from "@/components/ui/row-actions";
 import { formatMoney, goalProgress } from "@/lib/finance/calculations";
+import { Plus } from "lucide-react";
 
 type Goal = {
   id: string;
@@ -44,24 +51,28 @@ export function GoalsClient({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Metas de ahorro"
-        description="Define hacia qué estás ahorrando y cuánto te falta."
+        title="Metas"
+        description="Objetivos de ahorro y avance."
         action={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            Nueva meta
-          </Button>
+          <Button
+            type="button"
+            size="icon"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            aria-label="Nueva meta"
+            onClick={() => setCreateOpen(true)}
+          />
         }
       />
 
       {goals.length === 0 ? (
         <EmptyPanel
-          title="Aún no tienes metas"
-          description="Define algo que quieras alcanzar — un viaje, un fondo de emergencia o cualquier objetivo."
+          title="Sin metas"
+          description="Define un objetivo — viaje, fondo de emergencia o cualquier meta."
           actionLabel="Crear meta"
           onAction={() => setCreateOpen(true)}
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {goals.map((goal) => {
             const { remaining, percent, completed } = goalProgress(
               Number(goal.current_amount),
@@ -69,9 +80,12 @@ export function GoalsClient({
             );
 
             return (
-              <article key={goal.id} className="border-b border-border pb-8 last:border-0">
+              <article
+                key={goal.id}
+                className="rounded-xl border border-border/80 bg-surface p-4"
+              >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-text">{goal.name}</p>
                     <p className="fc-amount mt-1 text-2xl font-semibold">
                       {formatMoney(Number(goal.current_amount), baseCurrency)}
@@ -82,41 +96,32 @@ export function GoalsClient({
                     </p>
                     <p className="mt-1 text-sm text-text-secondary">
                       {completed
-                        ? "Meta completada"
-                        : `Faltan ${formatMoney(remaining, baseCurrency)} · ${percent.toFixed(0)}%`}
-                      {goal.target_date ? ` · Objetivo ${goal.target_date}` : ""}
+                        ? "Completada"
+                        : `${formatMoney(remaining, baseCurrency)} restantes · ${percent.toFixed(0)}%`}
+                      {goal.target_date ? ` · ${goal.target_date}` : ""}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2 text-sm">
-                    <button
-                      type="button"
-                      className="fc-link font-medium"
+                  <RowActions>
+                    <ContributeAction
+                      active={contributeId === goal.id}
                       onClick={() =>
-                        setContributeId(contributeId === goal.id ? null : goal.id)
+                        setContributeId(
+                          contributeId === goal.id ? null : goal.id,
+                        )
                       }
-                    >
-                      Aportar
-                    </button>
-                    <button
-                      type="button"
-                      className="text-text-secondary hover:text-text"
+                    />
+                    <EditAction
+                      active={editingId === goal.id}
                       onClick={() =>
                         setEditingId(editingId === goal.id ? null : goal.id)
                       }
-                    >
-                      Editar
-                    </button>
-                    <form action={deleteGoalAction}>
-                      <input type="hidden" name="id" value={goal.id} />
-                      <button type="submit" className="text-text-muted hover:text-danger">
-                        Eliminar
-                      </button>
-                    </form>
-                  </div>
+                    />
+                    <DeleteFormAction action={deleteGoalAction} id={goal.id} />
+                  </RowActions>
                 </div>
-                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-full bg-primary transition-all"
                     style={{ width: `${Math.min(100, percent)}%` }}
                   />
                 </div>
@@ -126,7 +131,7 @@ export function GoalsClient({
                   </div>
                 ) : null}
                 {editingId === goal.id ? (
-                  <div className="mt-4">
+                  <div className="mt-4 border-t border-border/80 pt-4">
                     <GoalEditForm goal={goal} />
                   </div>
                 ) : null}

@@ -1,4 +1,4 @@
-import { deleteTransactionAction } from "@/app/actions/finance";
+import { TransactionRowActions } from "@/components/finance/transaction-row-actions";
 import {
   CategoryForm,
   CategoryList,
@@ -122,8 +122,8 @@ export default async function TransactionsPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Transacciones"
-        description="Historial completo. Filtra en un clic o busca por descripción."
+        title="Movimientos"
+        description="Historial y filtros."
       />
 
       {!hasAccounts ? (
@@ -198,7 +198,7 @@ export default async function TransactionsPage({
                               ) : null}
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
                             <span
                               className={`fc-mono-amount text-sm font-semibold leading-none ${
                                 isIncome
@@ -211,18 +211,7 @@ export default async function TransactionsPage({
                               {isExpense ? "−" : isIncome ? "+" : ""}
                               {formatMoney(Number(tx.amount), currency)}
                             </span>
-                            <Link href={`/transactions/${tx.id}`} className="text-xs fc-link">
-                              Editar
-                            </Link>
-                            <form action={deleteTransactionAction}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <button
-                                type="submit"
-                                className="text-xs text-text-muted hover:text-expense"
-                              >
-                                Eliminar
-                              </button>
-                            </form>
+                            <TransactionRowActions id={tx.id} />
                           </div>
                         </li>
                       );

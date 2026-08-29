@@ -177,7 +177,7 @@ button {
   }
 
   .fc-touch-target {
-    @apply inline-flex min-h-11 min-w-11 items-center justify-center;
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10;
   }
 
   .fc-mobile-dock {

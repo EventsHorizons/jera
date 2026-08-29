@@ -34,7 +34,7 @@ export function TransactionFilters({
     Boolean(params.to);
 
   return (
-    <Collapsible label={hasActive ? "Filtros activos" : "Buscar y filtrar"}>
+    <Collapsible label={hasActive ? "Filtros · activos" : "Filtros"}>
       <form className="space-y-3 rounded-xl border border-border/80 bg-surface p-4">
         <input
           name="q"

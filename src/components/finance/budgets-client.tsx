@@ -11,9 +11,15 @@ import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
 import {
+  DeleteFormAction,
+  EditAction,
+  RowActions,
+} from "@/components/ui/row-actions";
+import {
   budgetProgress,
   formatMoney,
 } from "@/lib/finance/calculations";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 type BudgetRow = {
@@ -49,24 +55,28 @@ export function BudgetsClient({
     <div className="space-y-8">
       <PageHeader
         title="Presupuestos"
-        description={`Límites de gasto para ${periodLabel}.`}
+        description={periodLabel}
         action={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            Nuevo presupuesto
-          </Button>
+          <Button
+            type="button"
+            size="icon"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            aria-label="Nuevo presupuesto"
+            onClick={() => setCreateOpen(true)}
+          />
         }
       />
 
       {budgets.length > 0 ? (
         <div className="fc-panel">
-          <p className="text-xs font-medium leading-none text-text-secondary">Resumen del mes</p>
-          <p className="fc-mono-amount mt-4 text-2xl font-semibold leading-none tracking-tight">
+          <p className="fc-label">Resumen</p>
+          <p className="fc-mono-amount mt-3 text-2xl font-semibold leading-none tracking-tight">
             {formatMoney(totalSpent)}{" "}
             <span className="text-base font-normal text-text-muted">
-              de {formatMoney(totalLimit)}
+              / {formatMoney(totalLimit)}
             </span>
           </p>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
             <div
               className="h-full rounded-full bg-zinc-900 transition-all"
               style={{
@@ -79,8 +89,8 @@ export function BudgetsClient({
 
       {budgets.length === 0 ? (
         <EmptyPanel
-          title="Sin presupuestos este mes"
-          description="Define un límite por categoría para saber cuánto te queda por gastar."
+          title="Sin presupuestos"
+          description="Define un límite por categoría para controlar tu gasto mensual."
           actionLabel="Crear presupuesto"
           onAction={() => setCreateOpen(true)}
         />
@@ -97,42 +107,33 @@ export function BudgetsClient({
             return (
               <article key={budget.id} className="fc-panel">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium leading-none text-text">{name}</p>
                     <p className="fc-mono-amount mt-2 text-sm text-text-secondary">
                       {formatMoney(spent)}{" "}
-                      <span className="text-text-muted">/ {formatMoney(Number(budget.amount_limit))}</span>
+                      <span className="text-text-muted">
+                        / {formatMoney(Number(budget.amount_limit))}
+                      </span>
                     </p>
                     <p
-                      className={`mt-2 text-xs font-medium ${
+                      className={`mt-1 text-xs font-medium ${
                         over ? "text-expense" : "text-text-secondary"
                       }`}
                     >
-                      {over ? "Presupuesto superado" : `Quedan ${formatMoney(remaining)}`}
+                      {over ? "Superado" : `${formatMoney(remaining)} restantes`}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="inline-flex min-h-11 items-center rounded-xl border border-border/80 px-4 text-xs text-text-secondary hover:bg-surface-muted"
+                  <RowActions>
+                    <EditAction
+                      active={editingId === budget.id}
                       onClick={() =>
                         setEditingId(editingId === budget.id ? null : budget.id)
                       }
-                    >
-                      {editingId === budget.id ? "Cerrar" : "Editar"}
-                    </button>
-                    <form action={deleteBudgetAction}>
-                      <input type="hidden" name="id" value={budget.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex min-h-11 items-center rounded-xl px-4 text-xs text-text-muted hover:bg-expense-soft hover:text-expense"
-                      >
-                        Eliminar
-                      </button>
-                    </form>
-                  </div>
+                    />
+                    <DeleteFormAction action={deleteBudgetAction} id={budget.id} />
+                  </RowActions>
                 </div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                   <div
                     className={`h-full rounded-full transition-all ${
                       over ? "bg-expense" : percent >= 80 ? "bg-warning" : "bg-zinc-900"
@@ -154,17 +155,17 @@ export function BudgetsClient({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 border-t border-border/80 pt-6">
-        <Link href="/goals" className="fc-btn-ai-secondary text-xs">
+      <nav className="flex flex-wrap gap-2 border-t border-border/80 pt-6">
+        <Link href="/goals" className="fc-btn-ai-secondary h-9 px-3 text-xs">
           Metas
         </Link>
-        <Link href="/debts" className="fc-btn-ai-secondary text-xs">
+        <Link href="/debts" className="fc-btn-ai-secondary h-9 px-3 text-xs">
           Deudas
         </Link>
-        <Link href="/recurring" className="fc-btn-ai-secondary text-xs">
+        <Link href="/recurring" className="fc-btn-ai-secondary h-9 px-3 text-xs">
           Recurrentes
         </Link>
-      </div>
+      </nav>
 
       <Drawer
         open={createOpen}

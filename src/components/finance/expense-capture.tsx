@@ -158,16 +158,28 @@ export function ExpenseCaptureProvider({
 
 export function ExpenseCaptureButton({
   className,
-  label = "+ Agregar gasto",
+  label,
 }: {
   className?: string;
   label?: string;
 }) {
   const { open } = useExpenseCapture();
+  if (label) {
+    return (
+      <Button type="button" onClick={open} className={cn("gap-2", className)}>
+        {label}
+      </Button>
+    );
+  }
   return (
-    <Button type="button" onClick={open} className={cn("gap-2", className)}>
-      {label}
-    </Button>
+    <Button
+      type="button"
+      size="icon"
+      icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+      aria-label="Agregar gasto"
+      onClick={open}
+      className={className}
+    />
   );
 }
 

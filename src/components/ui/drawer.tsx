@@ -1,6 +1,8 @@
 "use client";
 
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils/cn";
+import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 export function Drawer({
@@ -33,7 +35,7 @@ export function Drawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-text/25 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-text/25 backdrop-blur-[1px] sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="drawer-title"
@@ -51,14 +53,9 @@ export function Drawer({
           <h2 id="drawer-title" className="text-lg font-semibold text-text">
             {title}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="fc-touch-target rounded-xl text-text-muted hover:bg-surface-muted hover:text-text"
-            aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          <IconButton label="Cerrar" variant="ghost" onClick={onClose}>
+            <X className="h-4 w-4" strokeWidth={1.75} />
+          </IconButton>
         </div>
         <div className="p-5">{children}</div>
       </div>
