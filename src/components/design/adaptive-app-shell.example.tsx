@@ -1,6 +1,13 @@
 /**
- * Jera — responsive grid + adaptive quick entry (mobile dock / desktop command).
- * Live implementation: app-shell.tsx, mobile-quick-entry-dock.tsx, command-palette.tsx
+ * Jera — Responsive layout reference (pixel-perfect matrix)
+ *
+ * Breakpoints (Tailwind):
+ * - Mobile  <640px  (default)  1 col · px-4 · bottom dock + nav · dvh
+ * - Tablet  ≥640px  (sm:)      2-col metrics · sidebar 240px · inline quick entry
+ * - Desktop ≥1024px (lg:)      12-col bento · gap-6 · max-w-7xl
+ * - Ultra   ≥1440px            same grid, content capped by max-w-7xl
+ *
+ * Live: app-shell.tsx · mobile-quick-entry-dock.tsx · command-palette.tsx · dashboard/page.tsx
  */
 import { JeraLogo } from "@/components/brand/jera-logo";
 import { BalanceCard } from "@/components/finance/balance-card";
@@ -13,6 +20,7 @@ const DEMO_CATEGORIES = [{ value: "1", label: "Comida" }];
 export function AdaptiveAppShellExample() {
   return (
     <div className="fc-app-root">
+      {/* sm+: sidebar 240px (w-60) */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border/80 bg-surface sm:flex">
         <div className="flex h-16 items-center border-b border-border/80 px-4">
           <JeraLogo size="sm" />
@@ -25,7 +33,7 @@ export function AdaptiveAppShellExample() {
           ].map(({ icon: Icon, label }) => (
             <div
               key={label}
-              className="flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm text-text-secondary"
+              className="flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm text-text-secondary"
             >
               <Icon className="h-4 w-4" strokeWidth={1.75} />
               {label}
@@ -39,6 +47,7 @@ export function AdaptiveAppShellExample() {
           <div className="sm:hidden">
             <JeraLogo size="sm" />
           </div>
+          {/* Tablet+ command trigger */}
           <button
             type="button"
             className="hidden h-11 flex-1 items-center justify-between rounded-xl border border-border/80 bg-surface-muted px-4 text-sm text-text-muted sm:flex lg:max-w-md"
@@ -53,37 +62,35 @@ export function AdaptiveAppShellExample() {
         <main className="fc-main">
           <div className="fc-bento-grid">
             <div className="col-span-12 space-y-6 lg:col-span-8">
+              {/* Inline quick entry — tablet+ */}
               <QuickEntryBar
                 accounts={DEMO_ACCOUNTS}
                 categories={DEMO_CATEGORIES}
                 className="hidden sm:block"
               />
-              <div className="fc-bento-grid">
-                <BalanceCard
-                  label="Balance actual"
-                  value="$12,450.00"
-                  icon={Wallet}
-                  className="col-span-12 sm:col-span-6 lg:col-span-4"
-                />
+              {/* Metrics: 1 → 2 → 3 columns */}
+              <div className="fc-metric-grid">
+                <BalanceCard label="Balance actual" value="$12,450.00" icon={Wallet} />
                 <BalanceCard
                   label="Gastos del mes"
                   value="$2,180.00"
                   subtitle="Hoy: $45.00"
                   tone="expense"
-                  className="col-span-12 sm:col-span-6 lg:col-span-4"
                 />
-                <BalanceCard
-                  label="Ingresos del mes"
-                  value="$4,200.00"
-                  tone="income"
-                  className="col-span-12 sm:col-span-6 lg:col-span-4"
-                />
+                <BalanceCard label="Ingresos del mes" value="$4,200.00" tone="income" />
               </div>
             </div>
+            <section className="col-span-12 lg:col-span-4">
+              <div className="fc-panel">
+                <p className="text-sm font-medium leading-none text-text">Actividad reciente</p>
+                <p className="mt-4 text-sm text-text-muted">Sin movimientos aún.</p>
+              </div>
+            </section>
           </div>
         </main>
 
-        <div className="fc-mobile-dock fixed left-0 right-0 border-t border-border/80 bg-surface/95 px-4 py-2 backdrop-blur sm:hidden">
+        {/* Mobile: floating dock above bottom nav */}
+        <div className="fc-mobile-dock fixed left-0 right-0 z-50 border-t border-border/80 bg-surface/95 px-4 py-2 backdrop-blur sm:hidden">
           <QuickEntryBar
             accounts={DEMO_ACCOUNTS}
             categories={DEMO_CATEGORIES}
@@ -92,7 +99,7 @@ export function AdaptiveAppShellExample() {
           />
         </div>
 
-        <nav className="fc-mobile-nav fixed bottom-0 left-0 right-0 border-t border-border/80 bg-surface/95 sm:hidden">
+        <nav className="fc-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-surface/95 sm:hidden">
           <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-2">
             {["Inicio", "Movimientos", "Presupuesto"].map((label) => (
               <span

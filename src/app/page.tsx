@@ -25,21 +25,24 @@ export default async function HomePage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
+    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-background text-text">
+      <header className="flex h-16 items-center justify-between border-b border-border/80 bg-surface px-4 sm:px-6">
         <JeraLogo size="md" />
-        <div className="flex gap-3">
-          <Link href="/login" className="text-sm text-text-secondary hover:text-text">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="inline-flex min-h-11 items-center text-sm text-text-secondary hover:text-text"
+          >
             Iniciar sesión
           </Link>
-          <Link href="/register" className="fc-btn-ai px-4 py-2 text-sm">
+          <Link href="/register" className="fc-btn-ai">
             Crear cuenta
           </Link>
         </div>
       </header>
 
       {configMissing || params.error === "config" ? (
-        <div className="border-b border-warning/30 bg-warning-soft px-6 py-3 text-sm text-warning">
+        <div className="border-b border-warning/30 bg-warning-soft px-4 py-4 text-sm text-warning sm:px-6">
           La app en producción necesita variables de Supabase en Vercel (Settings → Environment
           Variables):{" "}
           <code className="font-mono text-xs">NEXT_PUBLIC_SUPABASE_URL</code>,{" "}
@@ -49,7 +52,7 @@ export default async function HomePage({
         </div>
       ) : null}
 
-      <main className="mx-auto flex max-w-3xl flex-1 flex-col justify-center px-6 py-16">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-16 sm:px-6">
         <h1 className="text-4xl font-semibold tracking-tight">
           {APP_NAME} — {APP_TAGLINE.toLowerCase()}
         </h1>
@@ -57,7 +60,7 @@ export default async function HomePage({
           Un lugar único para saber cuánto dinero tienes, dónde está, de dónde viene, en qué lo
           gastas y qué compromisos financieros tienes.
         </p>
-        <div className="mt-8 flex gap-3">
+        <div className="mt-8 flex flex-wrap gap-4">
           <Link href="/register" className="fc-btn-ai">
             Empezar gratis
           </Link>

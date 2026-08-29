@@ -19,12 +19,12 @@ export function EmptyPanel({
       <p className="font-medium text-text">{title}</p>
       <p className="mx-auto mt-2 max-w-sm text-sm text-text-secondary">{description}</p>
       {actionLabel && actionHref ? (
-        <Link href={actionHref} className="mt-5 inline-block">
+        <Link href={actionHref} className="mt-6 inline-block">
           <Button>{actionLabel}</Button>
         </Link>
       ) : null}
       {actionLabel && onAction ? (
-        <Button type="button" onClick={onAction} className="mt-5">
+        <Button type="button" onClick={onAction} className="mt-6">
           {actionLabel}
         </Button>
       ) : null}

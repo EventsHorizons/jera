@@ -181,12 +181,11 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="fc-bento-grid">
+            <div className="fc-metric-grid">
               <BalanceCard
                 label="Balance actual"
                 value={formatMoneyMap(availableByCurrency, primaryCurrency)}
                 icon={Wallet}
-                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
               <BalanceCard
                 label="Gastos del mes"
@@ -194,14 +193,12 @@ export default async function DashboardPage() {
                 subtitle={`Hoy: ${formatMoney(todayExpense, primaryCurrency)}`}
                 icon={ArrowUpRight}
                 tone="expense"
-                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
               <BalanceCard
                 label="Ingresos del mes"
                 value={formatMoney(monthIncome, primaryCurrency)}
                 icon={ArrowDownLeft}
                 tone="income"
-                className="col-span-12 sm:col-span-6 lg:col-span-4"
               />
             </div>
 

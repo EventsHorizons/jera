@@ -18,12 +18,12 @@ export function Select({
   const selectId = id ?? props.name;
 
   return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-text-secondary">{label}</span>
+    <label className="flex flex-col gap-2 text-sm">
+      <span className="font-medium leading-none text-text-secondary">{label}</span>
       <select
         id={selectId}
         className={cn(
-          "h-10 rounded-[10px] border border-border bg-surface px-3 text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20",
+          "h-11 min-h-11 rounded-xl border border-border/80 bg-surface px-4 text-text outline-none transition focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5",
           error && "border-danger",
           className,
         )}

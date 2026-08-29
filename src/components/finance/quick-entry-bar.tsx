@@ -111,7 +111,7 @@ export function QuickEntryBar({
           "group flex h-11 items-center gap-2 border border-border/80 bg-surface transition-[border-color,box-shadow]",
           isDock && "rounded-full px-4",
           isCommand && "rounded-xl px-4",
-          !isDock && !isCommand && "rounded-xl px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
+          !isDock && !isCommand && "rounded-xl border-border/80 px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
           success && "border-income/40",
           "focus-within:border-zinc-300 focus-within:shadow-[0_0_0_4px_rgba(9,9,11,0.04)]",
           disabled && "opacity-60",

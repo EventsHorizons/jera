@@ -41,20 +41,20 @@ export function Drawer({
     >
       <div
         className={cn(
-          "max-h-[90vh] w-full overflow-y-auto bg-surface shadow-lg sm:max-w-md sm:rounded-2xl",
-          "rounded-t-2xl border border-border",
+          "max-h-[90dvh] w-full overflow-y-auto bg-surface shadow-lg sm:max-w-md sm:rounded-2xl",
+          "rounded-t-2xl border border-border/80",
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-border bg-surface px-5 py-4">
-          <h2 id="drawer-title" className="font-serif text-lg font-semibold text-text">
+        <div className="sticky top-0 flex items-center justify-between border-b border-border/80 bg-surface px-5 py-4">
+          <h2 id="drawer-title" className="text-lg font-semibold text-text">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-text-muted hover:bg-surface-muted hover:text-text"
+            className="fc-touch-target rounded-xl text-text-muted hover:bg-surface-muted hover:text-text"
             aria-label="Cerrar"
           >
             ✕

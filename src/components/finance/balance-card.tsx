@@ -30,6 +30,7 @@ export function BalanceCard({
               tone === "default" && "text-text-muted",
             )}
             strokeWidth={1.75}
+            aria-hidden
           />
         ) : null}
         <p className="text-xs font-medium leading-none text-text-secondary">{label}</p>

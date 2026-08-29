@@ -120,7 +120,7 @@ export function AppShell({
                     href={item.href}
                     title={item.label}
                     className={cn(
-                      "flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors",
+                      "flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors",
                       sidebarCollapsed && "justify-center px-2",
                       active
                         ? "bg-surface-muted font-medium text-text"
@@ -145,7 +145,7 @@ export function AppShell({
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex min-h-11 items-center rounded-xl px-3 py-2 text-sm transition-colors",
+                        "flex min-h-11 items-center rounded-xl px-4 py-2 text-sm transition-colors",
                         isActive(pathname, item.href)
                           ? "bg-surface-muted font-medium text-text"
                           : "text-text-secondary hover:bg-surface-muted hover:text-text",

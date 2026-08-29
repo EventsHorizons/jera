@@ -96,15 +96,15 @@ export function BudgetsClient({
 
             return (
               <article key={budget.id} className="fc-panel">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-medium text-text">{name}</p>
-                    <p className="fc-mono-amount mt-1 text-sm text-text-secondary">
+                    <p className="font-medium leading-none text-text">{name}</p>
+                    <p className="fc-mono-amount mt-2 text-sm text-text-secondary">
                       {formatMoney(spent)}{" "}
                       <span className="text-text-muted">/ {formatMoney(Number(budget.amount_limit))}</span>
                     </p>
                     <p
-                      className={`mt-1 text-xs font-medium ${
+                      className={`mt-2 text-xs font-medium ${
                         over ? "text-expense" : "text-text-secondary"
                       }`}
                     >
@@ -114,7 +114,7 @@ export function BudgetsClient({
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      className="rounded-full border border-border/80 px-3 py-1 text-xs text-text-secondary hover:bg-surface-muted"
+                      className="inline-flex min-h-11 items-center rounded-xl border border-border/80 px-4 text-xs text-text-secondary hover:bg-surface-muted"
                       onClick={() =>
                         setEditingId(editingId === budget.id ? null : budget.id)
                       }
@@ -125,7 +125,7 @@ export function BudgetsClient({
                       <input type="hidden" name="id" value={budget.id} />
                       <button
                         type="submit"
-                        className="rounded-full px-3 py-1 text-xs text-text-muted hover:bg-expense-soft hover:text-expense"
+                        className="inline-flex min-h-11 items-center rounded-xl px-4 text-xs text-text-muted hover:bg-expense-soft hover:text-expense"
                       >
                         Eliminar
                       </button>
