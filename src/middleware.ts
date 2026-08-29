@@ -29,6 +29,7 @@ const PROTECTED_PREFIXES = [
   "/budgets",
   "/goals",
   "/debts",
+  "/plan",
 ];
 
 function isProtected(pathname: string) {
@@ -42,8 +43,20 @@ function isAuthRoute(pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request);
+  const session = await updateSession(request);
   const { pathname } = request.nextUrl;
+
+  if (session.configMissing) {
+    if (pathname === "/" || pathname.startsWith("/auth/")) {
+      return session.supabaseResponse;
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.searchParams.set("error", "config");
+    return NextResponse.redirect(url);
+  }
+
+  const { supabaseResponse, user } = session;
 
   if (pathname.startsWith("/auth/")) {
     return supabaseResponse;
