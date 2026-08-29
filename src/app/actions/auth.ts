@@ -1,5 +1,6 @@
 "use server";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   AUTH_RATE_LIMITS,
@@ -25,9 +26,14 @@ import { redirect } from "next/navigation";
 
 async function getOrigin() {
   const headerStore = await headers();
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  // Prefer configured public site URL so auth redirects never point at localhost in prod.
+  if (fromEnv && !fromEnv.includes("localhost")) {
+    return fromEnv;
+  }
   return (
     headerStore.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
+    fromEnv ??
     "http://localhost:3000"
   );
 }
@@ -114,14 +120,46 @@ export async function registerAction(
     return { error: authErrorMessage(error.message) };
   }
 
-  // When email confirmations are enabled, session is null until verified.
-  if (data.session) {
-    redirect("/onboarding");
+  if (!data.user) {
+    return { error: "No se pudo crear la cuenta. Inténtalo de nuevo." };
   }
 
-  redirect(
-    `/verify-email?email=${encodeURIComponent(parsed.data.email.toLowerCase())}`,
-  );
+  // Supabase returns an empty identities array when the email is already registered
+  // and confirmations are enabled (anti-enumeration).
+  if (data.user.identities && data.user.identities.length === 0) {
+    return {
+      error: "Este correo ya está registrado. Inicia sesión o recupera tu contraseña.",
+    };
+  }
+
+  // Product decision: no email verification gate. Confirm immediately via admin API.
+  try {
+    const admin = createAdminClient();
+    const { error: confirmError } = await admin.auth.admin.updateUserById(
+      data.user.id,
+      { email_confirm: true },
+    );
+    if (confirmError) {
+      console.error("auto-confirm failed", confirmError.message);
+    }
+  } catch (err) {
+    console.error("auto-confirm unavailable", err);
+  }
+
+  if (!data.session) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email.toLowerCase(),
+      password: parsed.data.password,
+    });
+    if (signInError) {
+      return {
+        error:
+          "Cuenta creada, pero no se pudo iniciar sesión automáticamente. Prueba iniciar sesión.",
+      };
+    }
+  }
+
+  redirect("/onboarding");
 }
 
 export async function loginAction(
@@ -377,10 +415,6 @@ export async function deleteAccountAction(
     return { error: "Tu sesión ha expirado." };
   }
 
-  if (!user.email_confirmed_at) {
-    return { error: "Debes verificar tu correo antes de eliminar la cuenta." };
-  }
-
   const { error: verifyError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: parsed.data.password,
@@ -402,44 +436,10 @@ export async function deleteAccountAction(
 
 export async function resendVerificationAction(
   _prev: ActionState,
-  formData: FormData,
+  _formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const origin = await getOrigin();
-  const formEmail = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
-  const email = user?.email ?? formEmail;
-
-  if (!email) {
-    return {
-      error: "Indica el correo al que debemos reenviar la verificación.",
-    };
-  }
-
-  const limited = rateLimit(
-    `resend:${email}`,
-    AUTH_RATE_LIMITS.resendVerification.limit,
-    AUTH_RATE_LIMITS.resendVerification.windowMs,
-  );
-  if (!limited.ok) return rateLimitedMessage(limited.retryAfterSeconds);
-
-  // Same generic success path whether or not the email exists (avoid enumeration).
-  await supabase.auth.resend({
-    type: "signup",
-    email,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
-    },
-  });
-
   return {
-    success:
-      "Si el correo está pendiente de verificación, recibirás un nuevo enlace.",
+    success: "La verificación por correo está desactivada. Puedes iniciar sesión normalmente.",
   };
 }
 
@@ -488,7 +488,7 @@ export async function createFirstAccountAction(
     if (error.code === "23505") {
       return { error: "Ya tienes una cuenta con ese nombre." };
     }
-    return { error: "No se pudo crear la cuenta financiera." };
+    return { error: error.message || "No se pudo crear la cuenta financiera." };
   }
 
   await supabase

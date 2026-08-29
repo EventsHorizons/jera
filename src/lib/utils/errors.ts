@@ -22,7 +22,7 @@ export function authErrorMessage(message: string): string {
   }
 
   if (normalized.includes("email not confirmed")) {
-    return "Debes verificar tu correo antes de continuar";
+    return "No se pudo iniciar sesión. Prueba de nuevo o recupera tu contraseña.";
   }
 
   if (

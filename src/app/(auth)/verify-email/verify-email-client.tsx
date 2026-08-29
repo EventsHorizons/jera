@@ -1,67 +1,47 @@
 "use client";
 
-import { useActionState } from "react";
-import { resendVerificationAction } from "@/app/actions/auth";
-import type { ActionState } from "@/lib/utils/errors";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
-
-const initialState: ActionState = {};
 
 export function VerifyEmailClient({
   email,
-  allowEmailEdit = false,
 }: {
   email: string;
   allowEmailEdit?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(
-    resendVerificationAction,
-    initialState,
-  );
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Verifica tu correo</h1>
+        <h1 className="text-2xl font-semibold">Ya puedes continuar</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Te enviamos un enlace de verificación
+          Jera no requiere verificación por correo
           {email ? (
             <>
               {" "}
-              a <strong className="text-text">{email}</strong>
+              para <strong className="text-text">{email}</strong>
             </>
           ) : null}
-          . Debes confirmarlo antes de iniciar sesión.
+          . Si acabas de registrarte, inicia sesión e irás al onboarding.
         </p>
       </div>
-      {state.error ? <Alert variant="error">{state.error}</Alert> : null}
-      {state.success ? <Alert variant="success">{state.success}</Alert> : null}
-      <form action={formAction} className="space-y-4">
-        {allowEmailEdit ? (
-          <Input
-            name="email"
-            type="email"
-            label="Correo electrónico"
-            defaultValue={email}
-            required
-            autoComplete="email"
-          />
-        ) : (
-          <input type="hidden" name="email" value={email} />
-        )}
-        <Button type="submit" loading={pending} variant="secondary">
-          Reenviar correo de verificación
-        </Button>
-      </form>
-      <Link
-        href="/login"
-        className="inline-block text-sm text-primary hover:text-primary-hover"
-      >
-        Ir al inicio de sesión
-      </Link>
+      <Alert variant="success">
+        La verificación por correo está desactivada. No hace falta reenviar
+        enlaces.
+      </Alert>
+      <div className="flex flex-col gap-3 text-sm">
+        <Link
+          href="/login"
+          className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-4 font-medium text-primary-foreground hover:bg-primary-hover"
+        >
+          Ir al inicio de sesión
+        </Link>
+        <Link
+          href="/register"
+          className="text-center text-primary hover:text-primary-hover"
+        >
+          Crear otra cuenta
+        </Link>
+      </div>
     </div>
   );
 }

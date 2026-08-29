@@ -59,7 +59,7 @@ export async function createAccountAction(
 
   if (error) {
     if (error.code === "23505") return { error: "Ya tienes una cuenta con ese nombre." };
-    return { error: "No se pudo crear la cuenta." };
+    return { error: error.message || "No se pudo crear la cuenta." };
   }
 
   revalidateFinance();

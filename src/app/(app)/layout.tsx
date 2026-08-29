@@ -41,7 +41,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
       displayName={profile?.display_name ?? user.email ?? "Usuario"}
-      emailVerified={Boolean(user.email_confirmed_at)}
       accounts={accounts}
       categories={categories}
     >

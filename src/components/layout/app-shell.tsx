@@ -38,13 +38,11 @@ function isActive(pathname: string, href: string) {
 export function AppShell({
   children,
   displayName,
-  emailVerified,
   accounts,
   categories,
 }: {
   children: ReactNode;
   displayName: string;
-  emailVerified: boolean;
   accounts: Array<{ value: string; label: string }>;
   categories: Array<{ value: string; label: string }>;
 }) {
@@ -215,15 +213,6 @@ export function AppShell({
             />
           </div>
         </header>
-
-        {!emailVerified ? (
-          <div className="border-b border-warning/20 bg-warning-soft px-4 py-2 text-sm text-warning sm:px-6">
-            Verifica tu correo.{" "}
-            <Link href="/verify-email" className="font-medium underline">
-              Reenviar
-            </Link>
-          </div>
-        ) : null}
 
         <main className="fc-main">{children}</main>
 

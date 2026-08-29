@@ -13,16 +13,10 @@ export default async function VerifyEmailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user?.email_confirmed_at) {
+  // Email verification is not part of the product flow anymore.
+  if (user) {
     redirect("/dashboard");
   }
 
-  const email = user?.email ?? params.email ?? "";
-
-  return (
-    <VerifyEmailClient
-      email={email}
-      allowEmailEdit={!user?.email}
-    />
-  );
+  return <VerifyEmailClient email={params.email ?? ""} />;
 }

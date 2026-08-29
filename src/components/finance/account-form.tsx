@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import {
   createAccountAction,
   updateAccountAction,
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { ActionState } from "@/lib/utils/errors";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/finance/calculations";
+import { useRouter } from "next/navigation";
 
 const initialState: ActionState = {};
 
@@ -23,6 +24,7 @@ export function AccountForm({
   mode = "create",
   account,
   plain = false,
+  onSuccess,
 }: {
   mode?: "create" | "edit";
   account?: {
@@ -34,9 +36,17 @@ export function AccountForm({
     initial_balance: number;
   };
   plain?: boolean;
+  onSuccess?: () => void;
 }) {
+  const router = useRouter();
   const action = mode === "edit" ? updateAccountAction : createAccountAction;
   const [state, formAction, pending] = useActionState(action, initialState);
+
+  useEffect(() => {
+    if (!state.success) return;
+    onSuccess?.();
+    router.refresh();
+  }, [state.success, onSuccess, router]);
 
   return (
     <form

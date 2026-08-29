@@ -145,7 +145,7 @@ export function AccountsManager({
       ) : null}
 
       <Drawer open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva cuenta">
-        <AccountForm plain />
+        <AccountForm plain onSuccess={() => setCreateOpen(false)} />
         <p className="mt-4 text-xs leading-relaxed text-text-muted">
           El saldo inicial no cuenta como ingreso. Las tarjetas y préstamos son
           obligaciones, no dinero disponible.
