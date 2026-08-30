@@ -232,8 +232,8 @@ export function QuickEntryBar({
           writeDefaults(accountId, catId);
           setFlash(
             persistCurrency !== entered
-              ? `Guardado ${persistAmount} ${persistCurrency}`
-              : `Gastaste ${amount} ${entered} · ${catLabel}`,
+              ? `Movimiento guardado · ${persistAmount} ${persistCurrency}`
+              : `Movimiento guardado · ${catLabel}`,
           );
           setText("");
           setCategoryId("");
@@ -363,7 +363,7 @@ export function QuickEntryBar({
         <p className="mt-2 px-1 text-xs text-rose-600">{error}</p>
       ) : null}
       {flash ? (
-        <p className="mt-2 px-1 text-xs text-emerald-600">{flash}</p>
+        <p className="mt-2 px-1 text-xs text-income">{flash}</p>
       ) : null}
     </div>
   );

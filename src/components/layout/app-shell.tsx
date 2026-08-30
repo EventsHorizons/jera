@@ -37,7 +37,7 @@ const NAV = [
 
 const MORE_LINKS = [
   { href: "/accounts", label: "Cuentas" },
-  { href: "/achievements", label: "Hitos" },
+  { href: "/achievements", label: "Progreso" },
   { href: "/settings/profile", label: "Ajustes" },
 ] as const;
 

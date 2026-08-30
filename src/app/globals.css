@@ -300,6 +300,26 @@ button {
     box-shadow: var(--shadow-elevated);
   }
 
+  .fc-hud {
+    background: linear-gradient(
+      165deg,
+      var(--surface) 0%,
+      color-mix(in srgb, var(--primary-soft) 35%, var(--surface)) 100%
+    );
+  }
+
+  .dark .fc-hud {
+    background: linear-gradient(
+      165deg,
+      var(--surface) 0%,
+      color-mix(in srgb, var(--primary-soft) 55%, var(--surface)) 100%
+    );
+  }
+
+  .fc-progress-fill-animate {
+    animation: fc-progress-grow 0.6s ease-out;
+  }
+
   .fc-mobile-dock {
     bottom: calc(var(--fc-mobile-nav-h) + env(safe-area-inset-bottom, 0px));
   }
@@ -317,6 +337,17 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fc-progress-grow {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
   }
 }
 

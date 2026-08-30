@@ -54,7 +54,7 @@ export function GoalsClient({
     <div className="space-y-8">
       <PageHeader
         title="Metas"
-        description="Objetivos de ahorro y avance."
+        description="Objetivos concretos — cada aporte es progreso visible."
         action={
           <PrimaryAction label="Nueva meta" onClick={() => setCreateOpen(true)} />
         }

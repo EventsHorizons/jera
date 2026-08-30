@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/page-header";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/utils/cn";
 
 type Achievement = {
@@ -14,10 +15,8 @@ export function AchievementsClient({
   achievements,
   streak,
   longest,
-  xp,
-  level,
-  cohortOptIn,
   healthScore,
+  cohortOptIn,
   baseCurrency,
 }: {
   achievements: Achievement[];
@@ -29,78 +28,88 @@ export function AchievementsClient({
   healthScore: number;
   baseCurrency: string;
 }) {
-  // Local percentile preview until cohort n≥50 — based on health only.
+  const unlocked = achievements.filter((a) => a.unlockedAt);
   const band =
-    healthScore >= 80 ? "top 20%" : healthScore >= 60 ? "20–40%" : "mid";
+    healthScore >= 80 ? "alta" : healthScore >= 60 ? "media" : "en construcción";
 
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Progreso"
-        description="Medallas, nivel y comparación anónima (si activaste cohorte)."
+        title="Tu progreso"
+        description="Constancia, estabilidad e hitos personales — sin puntos artificiales."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="fc-panel">
-          <p className="fc-label">Nivel</p>
-          <p className="mt-2 text-2xl font-semibold">{level}</p>
-          <p className="text-sm text-text-muted">{xp} XP</p>
+          <p className="fc-label">Constancia</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{streak}</p>
+          <p className="text-sm text-text-muted">
+            días seguidos · máx. {longest}
+          </p>
         </div>
         <div className="fc-panel">
-          <p className="fc-label">Racha</p>
-          <p className="mt-2 text-2xl font-semibold">{streak}</p>
-          <p className="text-sm text-text-muted">Máxima {longest}</p>
+          <p className="fc-label">Estabilidad</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">
+            {Math.round(healthScore)}
+          </p>
+          <ProgressBar value={healthScore} className="mt-3" />
+          <p className="mt-2 text-xs text-text-muted capitalize">{band}</p>
         </div>
         <div className="fc-panel">
-          <p className="fc-label">Energía</p>
-          <p className="mt-2 text-2xl font-semibold">{Math.round(healthScore)}</p>
-          <p className="text-sm text-text-muted">{baseCurrency}</p>
+          <p className="fc-label">Hitos</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">
+            {unlocked.length}
+            <span className="text-base font-normal text-text-muted">
+              /{achievements.length}
+            </span>
+          </p>
+          <p className="text-sm text-text-muted">logros personales</p>
         </div>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-text">Medallas</h2>
+        <h2 className="text-sm font-medium text-text">Hitos personales</h2>
         <ul className="grid gap-3 sm:grid-cols-2">
           {achievements.map((a) => (
             <li
               key={a.id}
               className={cn(
-                "rounded-2xl border px-4 py-3",
+                "rounded-2xl border px-4 py-3 transition",
                 a.unlockedAt
-                  ? "border-border/80 bg-surface"
-                  : "border-border/50 bg-surface-muted/40 opacity-60",
+                  ? "border-primary/20 bg-primary-soft/30"
+                  : "border-border/50 bg-surface-muted/40",
               )}
             >
-              <p className="text-xs text-text-muted">{a.id}</p>
               <p className="font-medium text-text">{a.name}</p>
               <p className="mt-1 text-sm text-text-secondary">{a.description}</p>
               {a.unlockedAt ? (
-                <p className="mt-2 text-xs text-success">
-                  Desbloqueada {new Date(a.unlockedAt).toLocaleDateString("es")}
+                <p className="mt-2 text-xs text-income">
+                  Alcanzado {new Date(a.unlockedAt).toLocaleDateString("es")}
                 </p>
               ) : (
-                <p className="mt-2 text-xs text-text-muted">Bloqueada</p>
+                <p className="mt-2 text-xs text-text-muted">Por alcanzar</p>
               )}
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="space-y-2 rounded-2xl border border-border/80 p-4">
-        <h2 className="text-sm font-medium text-text">Tu cohorte</h2>
+      <section className="fc-card-muted space-y-2 px-5 py-4">
+        <h2 className="text-sm font-medium text-text">Comparación anónima</h2>
         {cohortOptIn ? (
           <>
             <p className="text-sm text-text-secondary">
-              Vista previa local: banda estimada <strong>{band}</strong> según tu
-              energía (hasta tener n≥50 agregados reales en {baseCurrency}).
+              Tu estabilidad está en banda <strong>{band}</strong> respecto a
+              usuarios similares ({baseCurrency}). Sin nombres ni montos ajenos.
             </p>
             <p className="text-xs text-text-muted">
-              Sin nombres ni montos de otras personas.
+              Vista estimada hasta tener suficientes datos agregados.
             </p>
           </>
         ) : (
           <p className="text-sm text-text-secondary">
-            Activa la comparación anónima en Ajustes → perfil para ver percentiles.
+            Activa la comparación anónima en Ajustes si quieres contexto
+            adicional sobre tu ritmo.
           </p>
         )}
       </section>

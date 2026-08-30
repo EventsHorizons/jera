@@ -28,6 +28,13 @@ export function currentMonthPeriod(reference = new Date()) {
   return { month, year, ...monthDateRange(month, year) };
 }
 
+export function previousMonthPeriod(reference = new Date()) {
+  const d = new Date(
+    Date.UTC(reference.getUTCFullYear(), reference.getUTCMonth() - 1, 1),
+  );
+  return currentMonthPeriod(d);
+}
+
 export function monthDateRange(month: number, year: number) {
   const start = `${year}-${String(month).padStart(2, "0")}-01`;
   const endMonth = month === 12 ? 1 : month + 1;

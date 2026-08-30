@@ -42,8 +42,8 @@ const PLAN_ITEMS: Array<{
   },
   {
     href: "/achievements",
-    title: "Hitos",
-    description: "Constancia y progreso",
+    title: "Progreso",
+    description: "Constancia y evolución",
     icon: Trophy,
   },
 ];

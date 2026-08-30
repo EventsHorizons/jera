@@ -159,7 +159,7 @@ export function CommandPalette({
       },
       {
         id: "nav-progress",
-        label: "Ir a Hitos",
+        label: "Ir a Progreso",
         group: "Navegación",
         keywords: "logros achievements hitos progreso",
         icon: Trophy,

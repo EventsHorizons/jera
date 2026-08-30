@@ -14,6 +14,7 @@ import {
   addDaysToISODate,
   currentMonthPeriod,
   formatMoney,
+  previousMonthPeriod,
 } from "@/lib/finance/calculations";
 import { convertAmount, fetchUsdRates } from "@/lib/finance/fx";
 import { todayInTimezone } from "@/lib/finance/gamification";
@@ -54,21 +55,12 @@ export default async function DashboardPage() {
   const profile = await getProfile(user.id);
   const supabase = await createClient();
   const period = currentMonthPeriod();
+  const prevPeriod = previousMonthPeriod();
   const today = new Date().toISOString().slice(0, 10);
   const baseCurrency = (profile?.base_currency ?? "USD").toUpperCase();
   const tz = profile?.timezone ?? "UTC";
   const localToday = todayInTimezone(tz);
   const graphStart = addDaysToISODate(localToday, -27);
-
-  const nowLocal = new Date(
-    new Date().toLocaleString("en-US", { timeZone: tz }),
-  );
-  const dayOfMonth = nowLocal.getDate();
-  const daysInMonth = new Date(
-    nowLocal.getFullYear(),
-    nowLocal.getMonth() + 1,
-    0,
-  ).getDate();
 
   await supabase.rpc("generate_due_recurring_transactions", { p_as_of: today });
   await seedStreakRiskNotification(user.id).catch(() => undefined);
@@ -82,6 +74,7 @@ export default async function DashboardPage() {
   const [
     { data: accounts },
     { data: monthTx },
+    { data: prevMonthTx },
     { data: recentTx },
     { data: streakRow },
     { data: stories },
@@ -101,6 +94,12 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .gte("occurred_on", period.start)
       .lt("occurred_on", period.endExclusive),
+    supabase
+      .from("transactions")
+      .select("type, amount, is_settlement, account_id")
+      .eq("user_id", user.id)
+      .gte("occurred_on", prevPeriod.start)
+      .lt("occurred_on", prevPeriod.endExclusive),
     supabase
       .from("transactions")
       .select(
@@ -198,6 +197,18 @@ export default async function DashboardPage() {
       (s, t) => s + toBase(Number(t.amount), currencyOf(t.account_id)),
       0,
     );
+  const prevMonthExpense = (prevMonthTx ?? [])
+    .filter((t) => t.type === "expense" && !t.is_settlement)
+    .reduce(
+      (s, t) => s + toBase(Number(t.amount), currencyOf(t.account_id)),
+      0,
+    );
+  const prevMonthIncome = (prevMonthTx ?? [])
+    .filter((t) => t.type === "income" && !t.is_settlement)
+    .reduce(
+      (s, t) => s + toBase(Number(t.amount), currencyOf(t.account_id)),
+      0,
+    );
 
   const spentByCategoryBudget: Record<string, number> = {};
   for (const expense of monthTx ?? []) {
@@ -269,6 +280,23 @@ export default async function DashboardPage() {
     0,
   );
 
+  const goalRows = (goals ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    target_amount: Number(g.target_amount),
+    current_amount: Number(g.current_amount),
+  }));
+  const activeGoal =
+    goalRows
+      .filter((g) => g.target_amount > 0 && g.current_amount < g.target_amount)
+      .sort(
+        (a, b) =>
+          b.current_amount / b.target_amount - a.current_amount / a.target_amount,
+      )[0] ?? null;
+
+  const netWorth = available + savingsCurrent;
+  const reservedInGoals = savingsCurrent;
+
   const grouped = new Map<string, NonNullable<typeof recentTx>>();
   for (const tx of recentTx ?? []) {
     const day = tx.occurred_on as string;
@@ -280,18 +308,6 @@ export default async function DashboardPage() {
     "es",
     { month: "long", year: "numeric" },
   );
-
-  const insightPoints = [
-    budgetRemainingPct != null
-      ? `${budgetRemainingPct.toFixed(0)}% de tu presupuesto aún disponible`
-      : null,
-    monthIncome > 0 && monthlySaveRate > 0
-      ? `Reservaste ${formatMoney(monthlySaveRate, baseCurrency)} este mes`
-      : null,
-    categoryRows[0]
-      ? `Mayor movimiento: ${categoryRows[0].name}`
-      : null,
-  ].filter(Boolean) as string[];
 
   return (
     <div className="fc-bento-grid">
@@ -325,49 +341,36 @@ export default async function DashboardPage() {
 
             <DashboardOverview
               displayName={profile?.display_name ?? undefined}
+              netWorth={netWorth}
               available={available}
+              reservedInGoals={reservedInGoals}
               monthExpense={monthExpense}
               monthIncome={monthIncome}
+              prevMonthExpense={prevMonthExpense}
+              prevMonthIncome={prevMonthIncome}
               baseCurrency={baseCurrency}
               savingsCurrent={savingsCurrent}
               savingsTarget={savingsTarget}
+              activeGoal={activeGoal}
+              monthlySaveRate={monthlySaveRate}
               streak={streakRow?.current_streak ?? 0}
               qualifiedToday={streakRow?.last_qualified_on === localToday}
               dayCells={dayCells}
-              dayOfMonth={dayOfMonth}
-              daysInMonth={daysInMonth}
               budgetRemainingPct={budgetRemainingPct}
             />
 
             <div className="grid gap-3 lg:grid-cols-2">
               <GoalsProgressStrip
-                goals={(goals ?? []).map((g) => ({
-                  id: g.id,
-                  name: g.name,
-                  target_amount: Number(g.target_amount),
-                  current_amount: Number(g.current_amount),
-                }))}
+                goals={goalRows}
                 baseCurrency={baseCurrency}
                 monthlySaveRate={monthlySaveRate}
+                excludeGoalId={activeGoal?.id}
               />
               <CategoryImpactList
                 rows={categoryRows}
                 baseCurrency={baseCurrency}
               />
             </div>
-
-            {insightPoints.length > 0 ? (
-              <section className="fc-card-muted px-5 py-4">
-                <p className="fc-label">Este mes</p>
-                <ul className="mt-3 space-y-2">
-                  {insightPoints.map((point) => (
-                    <li key={point} className="text-sm text-text-secondary">
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
           </>
         ) : (
           <div className="fc-empty py-10 text-center">
@@ -389,7 +392,7 @@ export default async function DashboardPage() {
         <section className="col-span-12 lg:col-span-4">
           <div className="mb-4 flex items-baseline justify-between gap-4 lg:sticky lg:top-24">
             <h2 className="text-sm font-medium leading-none text-text">
-              Actividad reciente
+              Actividad
             </h2>
             <Link href="/transactions" className="text-xs leading-none fc-link">
               Ver todo →
@@ -425,22 +428,16 @@ export default async function DashboardPage() {
                             href={`/transactions/${tx.id}`}
                             className="fc-list-row min-h-11"
                           >
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-medium leading-none text-text">
                                 {tx.description ||
                                   (tx.categories as { name?: string } | null)
                                     ?.name ||
                                   TYPE_LABELS[tx.type]}
                               </p>
-                              <span
-                                className={
-                                  isIncome
-                                    ? "fc-badge-income mt-2 inline-flex"
-                                    : "fc-badge-neutral mt-2 inline-flex"
-                                }
-                              >
+                              <p className="mt-1 text-xs text-text-muted">
                                 {TYPE_LABELS[tx.type]}
-                              </span>
+                              </p>
                             </div>
                             <span
                               className={cn(
