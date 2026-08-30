@@ -203,15 +203,20 @@ export default async function TransactionsPage({
                               className={`fc-mono-amount text-sm font-semibold leading-none ${
                                 isIncome
                                   ? "text-income"
-                                  : isExpense
-                                    ? "text-expense"
-                                    : "text-text-secondary"
+                                  : "text-text"
                               }`}
                             >
                               {isExpense ? "−" : isIncome ? "+" : ""}
                               {formatMoney(Number(tx.amount), currency)}
                             </span>
-                            <TransactionRowActions id={tx.id} />
+                            <TransactionRowActions
+                              id={tx.id}
+                              description={
+                                tx.description ||
+                                categoryName ||
+                                TYPE_LABELS[tx.type]
+                              }
+                            />
                           </div>
                         </li>
                       );

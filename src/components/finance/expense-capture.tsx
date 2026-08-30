@@ -25,12 +25,12 @@ import {
 } from "@/lib/finance/fx-client";
 import type { ActionState } from "@/lib/utils/errors";
 import { cn } from "@/lib/utils/cn";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import {
   Bus,
   Check,
   Coffee,
   Home,
-  Plus,
   ShoppingBag,
   Sparkles,
   Utensils,
@@ -158,41 +158,50 @@ export function ExpenseCaptureProvider({
 
 export function ExpenseCaptureButton({
   className,
-  label,
+  label = "Agregar gasto",
+  compact,
 }: {
   className?: string;
+  /** Etiqueta visible; omitir solo en espacios muy reducidos con `compact`. */
   label?: string;
+  compact?: boolean;
 }) {
   const { open } = useExpenseCapture();
-  if (label) {
+  const ExpenseIcon = ActionIcons.finance.expense;
+
+  if (compact) {
     return (
-      <Button type="button" onClick={open} className={cn("gap-2", className)}>
-        {label}
-      </Button>
+      <Button
+        type="button"
+        size="icon"
+        icon={<ExpenseIcon className="h-4 w-4" strokeWidth={1.75} />}
+        aria-label={label}
+        onClick={open}
+        className={className}
+      />
     );
   }
+
   return (
-    <Button
-      type="button"
-      size="icon"
-      icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-      aria-label="Agregar gasto"
-      onClick={open}
-      className={className}
-    />
+    <Button type="button" onClick={open} className={cn("gap-2", className)}>
+      <ExpenseIcon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+      {label}
+    </Button>
   );
 }
 
 export function ExpenseCaptureFab() {
   const { open } = useExpenseCapture();
+  const ExpenseIcon = ActionIcons.finance.expense;
   return (
     <button
       type="button"
       onClick={open}
-      className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white transition hover:bg-zinc-800 active:scale-95 sm:hidden"
+      className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary transition hover:bg-primary-hover active:scale-95 sm:hidden"
+      style={{ boxShadow: "var(--shadow-primary-glow)" }}
       aria-label="Agregar gasto"
     >
-      <Plus className="h-7 w-7" strokeWidth={1.75} />
+      <ExpenseIcon className="h-7 w-7" strokeWidth={1.75} />
     </button>
   );
 }
@@ -556,7 +565,7 @@ function ExpenseSheet({
                       className={cn(
                         "flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl border px-2 py-3 text-center text-xs font-medium transition active:scale-95",
                         resolvedCategory === cat.value
-                          ? "border-zinc-900 bg-zinc-900 text-white"
+                          ? "border-primary bg-primary text-on-primary"
                           : "border-border/80 bg-surface text-text hover:bg-surface-muted",
                       )}
                     >
@@ -672,7 +681,7 @@ function SheetChrome({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-zinc-900/25 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center fc-overlay p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title}

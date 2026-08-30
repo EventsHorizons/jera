@@ -1,6 +1,7 @@
 import { getProfile, requireUser } from "@/lib/auth/session";
 import { EngagementSettingsForm } from "@/components/settings/engagement-settings-form";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { ThemeSettings } from "@/components/settings/theme-settings";
 import { SettingsNav } from "@/components/settings/settings-nav";
 import { PageHeader } from "@/components/ui/page-header";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ export default async function ProfileSettingsPage() {
         description="Tu perfil y preferencias de la cuenta."
       />
       <SettingsNav active="/settings/profile" />
+      <ThemeSettings />
       <ProfileForm
         displayName={profile?.display_name ?? ""}
         email={user.email ?? ""}

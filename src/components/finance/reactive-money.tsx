@@ -90,11 +90,9 @@ function Metric({
       <p className="fc-label">{label}</p>
       <p
         className={`fc-mono-amount text-2xl font-semibold tracking-tight ${
-          tone === "expense"
-            ? "text-expense"
-            : tone === "income"
-              ? "text-income"
-              : "text-text"
+          tone === "income"
+            ? "text-income"
+            : "text-text"
         }`}
       >
         {value}
@@ -146,7 +144,7 @@ export function OptimisticActivityRail() {
               pendiente
             </span>
           </span>
-          <span className="fc-mono-amount shrink-0 font-medium text-expense">
+          <span className="fc-mono-amount shrink-0 font-medium text-text">
             −{formatMoney(item.amount, item.currency)}
           </span>
         </li>

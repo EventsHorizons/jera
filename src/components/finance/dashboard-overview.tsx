@@ -4,35 +4,46 @@ import { budgetCheckinAction } from "@/app/actions/gamification";
 import { contributeGoalAction } from "@/app/actions/finance";
 import { useExpenseCapture } from "@/components/finance/expense-capture";
 import { Button } from "@/components/ui/button";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import { formatMoney, todayISODate } from "@/lib/finance/calculations";
 import { cn } from "@/lib/utils/cn";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ComponentType } from "react";
 
 type DayCell = { date: string; active: boolean };
 
+function greetingForHour() {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
 export function DashboardOverview({
+  displayName,
   available,
   monthExpense,
   monthIncome,
   baseCurrency,
-  healthScore,
+  savingsCurrent,
+  savingsTarget,
   streak,
-  freezeTokens,
   qualifiedToday,
   dayCells,
   dayOfMonth,
   daysInMonth,
   budgetRemainingPct,
 }: {
+  displayName?: string;
   available: number;
   monthExpense: number;
   monthIncome: number;
   baseCurrency: string;
-  healthScore: number;
+  savingsCurrent: number;
+  savingsTarget: number;
   streak: number;
-  freezeTokens: number;
   qualifiedToday: boolean;
   dayCells: DayCell[];
   dayOfMonth: number;
@@ -44,144 +55,180 @@ export function DashboardOverview({
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
-  const saveCapacity =
-    monthIncome > 0
-      ? Math.max(0, ((monthIncome - monthExpense) / monthIncome) * 100)
-      : 0;
+  const monthlyNet = monthIncome - monthExpense;
+  const reservedThisMonth = Math.max(0, monthlyNet);
+  const savingsPct =
+    savingsTarget > 0
+      ? Math.min(100, (savingsCurrent / savingsTarget) * 100)
+      : monthIncome > 0
+        ? Math.min(100, (reservedThisMonth / monthIncome) * 100)
+        : 0;
 
-  const paceExpected =
-    daysInMonth > 0 ? (dayOfMonth / daysInMonth) * 100 : 0;
-  const budgetHealth =
-    budgetRemainingPct == null
-      ? Math.round(healthScore)
-      : Math.round(budgetRemainingPct);
+  const savingsLabel =
+    savingsTarget > 0
+      ? `${formatMoney(savingsCurrent, baseCurrency)} de ${formatMoney(savingsTarget, baseCurrency)}`
+      : monthIncome > 0
+        ? `${formatMoney(reservedThisMonth, baseCurrency)} reservado este mes`
+        : "Registra ingresos para medir tu progreso";
 
-  const paceLabel =
-    budgetRemainingPct == null
-      ? "Sin presupuestos este mes"
-      : budgetRemainingPct >= 100 - paceExpected
-        ? "Dentro del ritmo"
-        : "Por encima del ritmo";
+  const CalendarIcon = ActionIcons.utility.calendar;
+  const ExpenseIcon = ActionIcons.finance.expense;
+  const firstName = displayName?.split(/\s+/)[0];
 
   return (
-    <section className="space-y-4">
-      {/* Primary metrics */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <MetricCard
-          label="Saldo disponible"
-          value={formatMoney(available, baseCurrency)}
-          tone="neutral"
+    <section className="space-y-6">
+      {/* Hero — calm, not shouting */}
+      <div className="fc-card px-5 py-6 sm:px-6 sm:py-7">
+        {firstName ? (
+          <p className="text-sm text-text-secondary">
+            {greetingForHour()}, {firstName}
+          </p>
+        ) : null}
+        <p className={cn("fc-label", firstName ? "mt-4" : "")}>
+          Dinero disponible
+        </p>
+        <p className="fc-hero-amount mt-2">{formatMoney(available, baseCurrency)}</p>
+        {monthIncome > 0 || monthExpense > 0 ? (
+          <p
+            className={cn(
+              "mt-3 inline-flex items-center gap-1.5 text-sm font-medium",
+              monthlyNet >= 0 ? "text-income" : "text-text-secondary",
+            )}
+          >
+            {monthlyNet >= 0 ? (
+              <ArrowDownLeft className="h-3.5 w-3.5" strokeWidth={2} />
+            ) : (
+              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
+            )}
+            {monthlyNet >= 0 ? "+" : ""}
+            {formatMoney(monthlyNet, baseCurrency)} este mes
+          </p>
+        ) : (
+          <p className="mt-3 text-sm text-text-muted">
+            Sin movimientos registrados este mes
+          </p>
+        )}
+      </div>
+
+      {/* Savings as progress, not deprivation */}
+      <div className="fc-card px-5 py-5 sm:px-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <div>
+            <p className="fc-label">Progreso de ahorro</p>
+            <p className="mt-2 text-sm text-text-secondary">{savingsLabel}</p>
+          </div>
+          <p className="font-mono text-lg font-semibold tabular-nums text-primary">
+            {savingsPct.toFixed(0)}%
+          </p>
+        </div>
+        <div className="fc-progress-track mt-4">
+          <div
+            className="fc-progress-fill"
+            style={{ width: `${Math.max(0, savingsPct)}%` }}
+          />
+        </div>
+        {budgetRemainingPct != null ? (
+          <p className="mt-3 text-xs text-text-muted">
+            Presupuesto: {budgetRemainingPct.toFixed(0)}% disponible · día{" "}
+            {dayOfMonth} de {daysInMonth}
+          </p>
+        ) : null}
+      </div>
+
+      {/* Month context — neutral information */}
+      <div className="grid grid-cols-2 gap-3">
+        <MonthStat
+          label="Entradas del mes"
+          value={formatMoney(monthIncome, baseCurrency)}
+          icon={ActionIcons.finance.income}
         />
-        <MetricCard
-          label="Ritmo de gasto (mes)"
+        <MonthStat
+          label="Salidas del mes"
           value={formatMoney(monthExpense, baseCurrency)}
-          hint={`Día ${dayOfMonth} de ${daysInMonth}`}
-          tone="expense"
-        />
-        <MetricCard
-          label="Capacidad de ahorro"
-          value={`${saveCapacity.toFixed(0)}%`}
-          hint={
-            monthIncome > 0
-              ? `${formatMoney(Math.max(0, monthIncome - monthExpense), baseCurrency)} neto`
-              : "Sin ingresos registrados"
-          }
-          tone="income"
+          icon={ActionIcons.finance.expense}
         />
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
-        {/* Financial health */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-                Salud financiera
-              </p>
-              <p className="mt-1 text-sm text-zinc-600">{paceLabel}</p>
-            </div>
-            <p className="font-mono text-2xl font-semibold tabular-nums text-zinc-900">
-              {budgetHealth}
-              <span className="text-sm font-normal text-zinc-400">%</span>
-            </p>
-          </div>
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-zinc-100">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                budgetHealth >= 60
-                  ? "bg-emerald-500"
-                  : budgetHealth >= 35
-                    ? "bg-zinc-400"
-                    : "bg-rose-500",
-              )}
-              style={{ width: `${Math.min(100, Math.max(0, budgetHealth))}%` }}
-            />
-          </div>
-          <p className="mt-2 text-xs text-zinc-400">
-            Presupuesto restante vs. avance del mes · índice compuesto {Math.round(healthScore)}
-          </p>
-        </div>
-
-        {/* Consistency / streak */}
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-              Constancia
-            </p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">
-              {streak}d
-              {freezeTokens > 0 ? (
-                <span className="ml-2 font-sans text-xs font-normal text-zinc-400">
-                  · {freezeTokens} reserva
-                </span>
-              ) : null}
+      {/* Subtle habit tracking */}
+      <div className="fc-card-muted px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-text">Constancia</p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {streak > 0
+                ? `${streak} día${streak === 1 ? "" : "s"} seguidos revisando tus finanzas`
+                : "Un minuto al día mantiene el control"}
             </p>
           </div>
           <ConsistencyGraph cells={dayCells} />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {qualifiedToday ? (
-              <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                Hoy registrado
-              </span>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                loading={pending}
-                className="h-8 px-3 text-xs"
-                onClick={() => {
-                  startTransition(async () => {
-                    const res = await budgetCheckinAction();
-                    setMsg(res.success ?? res.error ?? null);
-                    router.refresh();
-                  });
-                }}
-              >
-                Revisión
-              </Button>
-            )}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {qualifiedToday ? (
+            <span className="rounded-lg bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
+              Revisión de hoy lista
+            </span>
+          ) : (
             <Button
               type="button"
-              variant="ghost"
+              variant="secondary"
               size="sm"
-              className="h-8 px-2 text-xs"
+              loading={pending}
+              className="h-8 gap-1.5 px-3 text-xs"
               onClick={() => {
-                const detail = { handled: false };
-                document.dispatchEvent(
-                  new CustomEvent("jera:focus-quick-entry", { detail }),
-                );
-                if (!detail.handled) open();
+                startTransition(async () => {
+                  const res = await budgetCheckinAction();
+                  setMsg(res.success ?? res.error ?? null);
+                  router.refresh();
+                });
               }}
             >
-              Gasto · N
+              <CalendarIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+              Registrar revisión
             </Button>
-          </div>
-          {msg ? <p className="mt-2 text-xs text-zinc-500">{msg}</p> : null}
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 px-2 text-xs"
+            onClick={() => {
+              const detail = { handled: false };
+              document.dispatchEvent(
+                new CustomEvent("jera:focus-quick-entry", { detail }),
+              );
+              if (!detail.handled) open();
+            }}
+          >
+            <ExpenseIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            Agregar gasto
+            <kbd className="hidden rounded border border-border bg-surface px-1 font-mono text-[10px] text-text-muted sm:inline">
+              N
+            </kbd>
+          </Button>
         </div>
+        {msg ? <p className="mt-2 text-xs text-text-muted">{msg}</p> : null}
       </div>
     </section>
+  );
+}
+
+function MonthStat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+}) {
+  return (
+    <div className="fc-card px-4 py-4">
+      <div className="flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5 text-text-muted" strokeWidth={1.75} />
+        <p className="text-xs text-text-muted">{label}</p>
+      </div>
+      <p className="fc-mono-amount mt-2 text-lg font-semibold text-text">{value}</p>
+    </div>
   );
 }
 
@@ -221,34 +268,24 @@ export function GoalsProgressStrip({
       const res = await contributeGoalAction({}, fd);
       setPendingId(null);
       if (res.success) {
-        setMsg(res.success);
+        setMsg("Aporte registrado.");
         setCustomByGoal((prev) => ({ ...prev, [goalId]: "" }));
         router.refresh();
       } else {
-        setMsg(res.error ?? "No se pudo registrar el aporte.");
+        setMsg(res.error ?? "No pudimos registrar el aporte.");
       }
     });
   };
 
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-          Objetivos de ahorro
-        </p>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/recurring"
-            className="text-xs text-action hover:text-action-hover"
-          >
-            Recurrente
-          </Link>
-          <Link href="/goals" className="text-xs text-zinc-500 hover:text-zinc-800">
-            Ver todos →
-          </Link>
-        </div>
+    <section className="fc-card px-5 py-5">
+      <div className="mb-4 flex items-baseline justify-between">
+        <p className="fc-label">Metas de ahorro</p>
+        <Link href="/goals" className="text-xs text-primary hover:text-primary-hover">
+          Ver todas →
+        </Link>
       </div>
-      <ul className="space-y-4">
+      <ul className="space-y-5">
         {goals.map((g) => {
           const pct =
             g.target_amount > 0
@@ -263,20 +300,18 @@ export function GoalsProgressStrip({
           return (
             <li key={g.id}>
               <div className="flex items-baseline justify-between gap-2">
-                <p className="truncate text-sm font-medium text-zinc-900">
-                  {g.name}
-                </p>
-                <p className="shrink-0 font-mono text-xs tabular-nums text-zinc-500">
+                <p className="truncate text-sm font-medium text-text">{g.name}</p>
+                <p className="shrink-0 font-mono text-xs tabular-nums text-primary">
                   {pct.toFixed(0)}%
                 </p>
               </div>
-              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-zinc-100">
+              <div className="fc-progress-track mt-2">
                 <div
-                  className="h-full rounded-full bg-zinc-900 transition-all duration-500"
+                  className="fc-progress-fill"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="mt-1 text-xs text-zinc-400">
+              <p className="mt-1.5 text-xs text-text-muted">
                 {formatMoney(g.current_amount, baseCurrency)} de{" "}
                 {formatMoney(g.target_amount, baseCurrency)}
                 {monthsLeft != null
@@ -290,7 +325,7 @@ export function GoalsProgressStrip({
                     type="button"
                     disabled={busy}
                     onClick={() => contribute(g.id, n)}
-                    className="h-7 rounded-md border border-zinc-200 px-2 font-mono text-[11px] text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-50"
+                    className="h-7 rounded-[10px] border border-border px-2 font-mono text-[11px] text-text-secondary transition hover:border-primary/30 hover:bg-primary-soft disabled:opacity-50"
                   >
                     +{n}
                   </button>
@@ -315,7 +350,7 @@ export function GoalsProgressStrip({
                       if (Number.isFinite(n) && n > 0) contribute(g.id, n);
                     }
                   }}
-                  className="h-7 w-16 rounded-md border border-zinc-200 bg-zinc-50 px-2 font-mono text-[11px] outline-none focus:border-action"
+                  className="h-7 w-16 rounded-[10px] border border-border bg-surface px-2 font-mono text-[11px] outline-none focus:border-primary/40"
                 />
                 <button
                   type="button"
@@ -324,7 +359,7 @@ export function GoalsProgressStrip({
                     const n = Number.parseFloat(customByGoal[g.id] ?? "");
                     if (Number.isFinite(n) && n > 0) contribute(g.id, n);
                   }}
-                  className="h-7 rounded-md bg-action px-2 text-[11px] font-medium text-white transition hover:bg-action-hover disabled:opacity-50"
+                  className="h-7 rounded-[10px] bg-primary px-2.5 text-[11px] font-medium text-on-primary transition hover:bg-primary-hover disabled:opacity-50"
                 >
                   Aportar
                 </button>
@@ -333,7 +368,7 @@ export function GoalsProgressStrip({
           );
         })}
       </ul>
-      {msg ? <p className="mt-3 text-xs text-zinc-500">{msg}</p> : null}
+      {msg ? <p className="mt-3 text-xs text-text-muted">{msg}</p> : null}
     </section>
   );
 }
@@ -350,28 +385,26 @@ export function CategoryImpactList({
   const total = rows.reduce((s, r) => s + r.amount, 0);
 
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-          Impacto por categoría
-        </p>
-        <p className="font-mono text-xs tabular-nums text-zinc-400">
+    <section className="fc-card px-5 py-5">
+      <div className="mb-4 flex items-baseline justify-between">
+        <p className="fc-label">Dónde va tu dinero</p>
+        <p className="font-mono text-xs tabular-nums text-text-muted">
           {formatMoney(total, baseCurrency)}
         </p>
       </div>
-      <ul className="space-y-2.5">
+      <ul className="space-y-3">
         {rows.slice(0, 6).map((r) => {
           const inner = (
             <>
-              <div className="mb-1 flex items-baseline justify-between gap-2">
-                <span className="truncate text-sm text-zinc-700">{r.name}</span>
-                <span className="shrink-0 font-mono text-xs tabular-nums text-zinc-500">
+              <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                <span className="truncate text-sm text-text">{r.name}</span>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-text-secondary">
                   {formatMoney(r.amount, baseCurrency)}
                 </span>
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-zinc-100">
+              <div className="fc-progress-track h-1">
                 <div
-                  className="h-full rounded-full bg-zinc-400"
+                  className="h-full rounded-full bg-border transition-all duration-300"
                   style={{ width: `${(r.amount / max) * 100}%` }}
                 />
               </div>
@@ -382,7 +415,7 @@ export function CategoryImpactList({
               {r.id ? (
                 <Link
                   href={`/transactions?category=${encodeURIComponent(r.id)}`}
-                  className="block rounded-md transition hover:opacity-80"
+                  className="block rounded-lg transition hover:opacity-80"
                 >
                   {inner}
                 </Link>
@@ -397,37 +430,6 @@ export function CategoryImpactList({
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  tone: "neutral" | "expense" | "income";
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-2 font-mono text-2xl font-semibold tracking-tight tabular-nums",
-          tone === "expense" && "text-zinc-900",
-          tone === "income" && "text-emerald-600",
-          tone === "neutral" && "text-zinc-900",
-        )}
-      >
-        {value}
-      </p>
-      {hint ? <p className="mt-1 text-xs text-zinc-400">{hint}</p> : null}
-    </div>
-  );
-}
-
 function ConsistencyGraph({ cells }: { cells: DayCell[] }) {
   const weeks = useMemo(() => {
     const rows: DayCell[][] = [];
@@ -438,7 +440,7 @@ function ConsistencyGraph({ cells }: { cells: DayCell[] }) {
   }, [cells]);
 
   return (
-    <div className="mt-3 flex gap-1">
+    <div className="flex gap-1">
       {weeks.map((week, wi) => (
         <div key={wi} className="flex flex-col gap-1">
           {week.map((cell) => (
@@ -446,8 +448,8 @@ function ConsistencyGraph({ cells }: { cells: DayCell[] }) {
               key={cell.date}
               title={cell.date}
               className={cn(
-                "h-2.5 w-2.5 rounded-[3px]",
-                cell.active ? "bg-zinc-900" : "bg-zinc-100",
+                "h-2.5 w-2.5 rounded-[3px] transition-colors",
+                cell.active ? "bg-primary" : "bg-border",
               )}
             />
           ))}
@@ -459,32 +461,23 @@ function ConsistencyGraph({ cells }: { cells: DayCell[] }) {
 
 export function DashboardMetricsSkeleton() {
   return (
-    <section className="animate-pulse space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="rounded-xl border border-zinc-200 bg-white p-4"
-          >
-            <div className="h-3 w-24 rounded bg-zinc-100" />
-            <div className="mt-3 h-7 w-32 rounded bg-zinc-100" />
-            <div className="mt-2 h-3 w-20 rounded bg-zinc-50" />
+    <section className="animate-pulse space-y-6">
+      <div className="fc-card px-6 py-7">
+        <div className="h-3 w-28 rounded bg-surface-muted" />
+        <div className="mt-6 h-9 w-48 rounded bg-surface-muted" />
+        <div className="mt-3 h-4 w-32 rounded bg-surface-muted" />
+      </div>
+      <div className="fc-card px-6 py-5">
+        <div className="h-3 w-32 rounded bg-surface-muted" />
+        <div className="mt-4 h-1.5 rounded-full bg-surface-muted" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {[0, 1].map((i) => (
+          <div key={i} className="fc-card px-4 py-4">
+            <div className="h-3 w-24 rounded bg-surface-muted" />
+            <div className="mt-3 h-6 w-28 rounded bg-surface-muted" />
           </div>
         ))}
-      </div>
-      <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
-        <div className="h-28 rounded-xl border border-zinc-200 bg-white p-4">
-          <div className="h-3 w-28 rounded bg-zinc-100" />
-          <div className="mt-6 h-1.5 rounded-full bg-zinc-100" />
-        </div>
-        <div className="h-28 rounded-xl border border-zinc-200 bg-white p-4">
-          <div className="h-3 w-20 rounded bg-zinc-100" />
-          <div className="mt-4 flex gap-1">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-2.5 w-2.5 rounded-[3px] bg-zinc-100" />
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

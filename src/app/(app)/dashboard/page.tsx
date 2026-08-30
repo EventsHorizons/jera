@@ -19,6 +19,7 @@ import { convertAmount, fetchUsdRates } from "@/lib/finance/fx";
 import { todayInTimezone } from "@/lib/finance/gamification";
 import { recalculateHealth } from "@/lib/finance/gamification-service";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -85,7 +86,6 @@ export default async function DashboardPage() {
     { data: streakRow },
     { data: stories },
     { data: notifs },
-    { data: freshProfile },
     { data: goals },
     { data: budgets },
     { data: streakEvents },
@@ -125,11 +125,6 @@ export default async function DashboardPage() {
       .is("read_at", null)
       .order("created_at", { ascending: false })
       .limit(3),
-    supabase
-      .from("profiles")
-      .select("health_score")
-      .eq("id", user.id)
-      .maybeSingle(),
     supabase
       .from("saving_goals")
       .select("id, name, target_amount, current_amount, status")
@@ -265,6 +260,15 @@ export default async function DashboardPage() {
 
   const monthlySaveRate = Math.max(0, monthIncome - monthExpense);
 
+  const savingsCurrent = (goals ?? []).reduce(
+    (s, g) => s + Number(g.current_amount),
+    0,
+  );
+  const savingsTarget = (goals ?? []).reduce(
+    (s, g) => s + Number(g.target_amount),
+    0,
+  );
+
   const grouped = new Map<string, NonNullable<typeof recentTx>>();
   for (const tx of recentTx ?? []) {
     const day = tx.occurred_on as string;
@@ -279,24 +283,22 @@ export default async function DashboardPage() {
 
   const insightPoints = [
     budgetRemainingPct != null
-      ? `Presupuesto: ${budgetRemainingPct.toFixed(0)}% restante`
-      : "Sin presupuestos activos este mes",
-    monthIncome > 0
-      ? `Capacidad de ahorro ${(
-          Math.max(0, ((monthIncome - monthExpense) / monthIncome) * 100)
-        ).toFixed(0)}%`
-      : "Registra ingresos para medir capacidad de ahorro",
+      ? `${budgetRemainingPct.toFixed(0)}% de tu presupuesto aún disponible`
+      : null,
+    monthIncome > 0 && monthlySaveRate > 0
+      ? `Reservaste ${formatMoney(monthlySaveRate, baseCurrency)} este mes`
+      : null,
     categoryRows[0]
-      ? `Mayor impacto: ${categoryRows[0].name}`
-      : "Sin gastos categorizados aún",
-  ];
+      ? `Mayor movimiento: ${categoryRows[0].name}`
+      : null,
+  ].filter(Boolean) as string[];
 
   return (
     <div className="fc-bento-grid">
       <div className="col-span-12 space-y-5 lg:col-span-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="fc-page-title text-lg md:text-xl">Inicio</h1>
+            <h1 className="sr-only">Inicio</h1>
             <p className="text-sm text-text-secondary">
               {monthLabel} · {baseCurrency}
             </p>
@@ -322,15 +324,14 @@ export default async function DashboardPage() {
             />
 
             <DashboardOverview
+              displayName={profile?.display_name ?? undefined}
               available={available}
               monthExpense={monthExpense}
               monthIncome={monthIncome}
               baseCurrency={baseCurrency}
-              healthScore={Number(
-                freshProfile?.health_score ?? profile?.health_score ?? 50,
-              )}
+              savingsCurrent={savingsCurrent}
+              savingsTarget={savingsTarget}
               streak={streakRow?.current_streak ?? 0}
-              freezeTokens={streakRow?.freeze_tokens ?? 0}
               qualifiedToday={streakRow?.last_qualified_on === localToday}
               dayCells={dayCells}
               dayOfMonth={dayOfMonth}
@@ -355,24 +356,18 @@ export default async function DashboardPage() {
               />
             </div>
 
-            <section className="rounded-xl border border-zinc-200 bg-white p-4">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
-                Lectura rápida del período
-              </p>
-              <ol className="mt-3 space-y-2">
-                {insightPoints.map((point, i) => (
-                  <li
-                    key={point}
-                    className="flex gap-2 text-sm text-zinc-700"
-                  >
-                    <span className="font-mono text-xs text-zinc-400">
-                      {i + 1}.
-                    </span>
-                    {point}
-                  </li>
-                ))}
-              </ol>
-            </section>
+            {insightPoints.length > 0 ? (
+              <section className="fc-card-muted px-5 py-4">
+                <p className="fc-label">Este mes</p>
+                <ul className="mt-3 space-y-2">
+                  {insightPoints.map((point) => (
+                    <li key={point} className="text-sm text-text-secondary">
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </>
         ) : (
           <div className="fc-empty py-10 text-center">
@@ -441,22 +436,19 @@ export default async function DashboardPage() {
                                 className={
                                   isIncome
                                     ? "fc-badge-income mt-2 inline-flex"
-                                    : isExpense
-                                      ? "fc-badge-expense mt-2 inline-flex"
-                                      : "mt-2 inline-flex text-xs text-text-muted"
+                                    : "fc-badge-neutral mt-2 inline-flex"
                                 }
                               >
                                 {TYPE_LABELS[tx.type]}
                               </span>
                             </div>
                             <span
-                              className={`fc-mono-amount shrink-0 text-sm font-semibold leading-none ${
+                              className={cn(
+                                "fc-mono-amount shrink-0 text-sm font-semibold leading-none",
                                 isIncome
                                   ? "text-income"
-                                  : isExpense
-                                    ? "text-expense"
-                                    : "text-text"
-                              }`}
+                                  : "text-text",
+                              )}
                             >
                               {isExpense ? "−" : isIncome ? "+" : ""}
                               {formatMoney(

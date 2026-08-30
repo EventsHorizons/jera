@@ -266,16 +266,16 @@ export function QuickEntryBar({
   const top = categories.slice(0, 6);
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-2">
+    <div className="fc-card p-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative min-w-0 flex-1">
           <div
             className={cn(
-              "flex h-10 items-center gap-2 rounded-lg bg-zinc-50 px-3 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-action/20",
+              "flex h-10 items-center gap-2 rounded-[10px] bg-surface-muted px-3 transition focus-within:bg-surface focus-within:ring-2 focus-within:ring-primary/15",
               error && "ring-2 ring-rose-200",
             )}
           >
-            <span className="font-mono text-sm text-zinc-300">
+            <span className="font-mono text-sm text-text-muted">
               {enteredCurrency}
             </span>
             <input
@@ -293,19 +293,19 @@ export function QuickEntryBar({
               }}
               placeholder="25 · Café COP · Uber 12.50"
               disabled={pending}
-              className="min-w-0 flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
+              className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
               aria-label="Registro rápido de gasto"
             />
             {pending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />
             ) : (
-              <kbd className="hidden rounded border border-zinc-200 bg-white px-1.5 font-mono text-[10px] text-zinc-400 sm:inline">
+              <kbd className="hidden rounded border border-border bg-surface px-1.5 font-mono text-[10px] text-text-muted sm:inline">
                 ↵
               </kbd>
             )}
           </div>
           {fxPreview ? (
-            <p className="mt-1 px-1 text-[11px] text-zinc-400">{fxPreview}</p>
+            <p className="mt-1 px-1 text-[11px] text-text-muted">{fxPreview}</p>
           ) : null}
         </div>
 
@@ -313,7 +313,7 @@ export function QuickEntryBar({
           type="button"
           onClick={() => setShowDate((v) => !v)}
           className={cn(
-            "inline-flex h-10 items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 text-xs text-zinc-600 transition hover:bg-zinc-50",
+            "inline-flex h-10 items-center gap-1.5 rounded-[10px] border border-border px-2.5 text-xs text-text-secondary transition hover:bg-surface-muted",
             showDate && "border-action/40 bg-action-soft text-action",
           )}
           aria-label="Fecha opcional"
@@ -329,7 +329,7 @@ export function QuickEntryBar({
             type="date"
             value={occurredOn}
             onChange={(e) => setOccurredOn(e.target.value)}
-            className="h-9 rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700 outline-none focus:border-zinc-300"
+            className="h-9 rounded-[10px] border border-border bg-surface-muted px-3 text-sm text-text outline-none focus:border-primary/40"
           />
         </div>
       ) : null}
@@ -349,8 +349,8 @@ export function QuickEntryBar({
               className={cn(
                 "h-8 rounded-full border px-2.5 text-xs transition",
                 active
-                  ? "border-zinc-900 bg-zinc-900 text-white"
-                  : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50",
+                  ? "border-primary bg-primary text-on-primary"
+                  : "border-border text-text-secondary hover:border-primary/30 hover:bg-primary-soft",
               )}
             >
               {c.label}
@@ -371,12 +371,12 @@ export function QuickEntryBar({
 
 export function QuickEntrySkeleton() {
   return (
-    <div className="animate-pulse rounded-xl border border-zinc-200 bg-white p-2">
-      <div className="h-10 rounded-lg bg-zinc-100" />
+    <div className="animate-pulse fc-card p-2">
+      <div className="h-10 rounded-[10px] bg-surface-muted" />
       <div className="mt-2 flex gap-1.5">
-        <div className="h-8 w-16 rounded-full bg-zinc-100" />
-        <div className="h-8 w-20 rounded-full bg-zinc-100" />
-        <div className="h-8 w-14 rounded-full bg-zinc-100" />
+        <div className="h-8 w-16 rounded-full bg-surface-muted" />
+        <div className="h-8 w-20 rounded-full bg-surface-muted" />
+        <div className="h-8 w-14 rounded-full bg-surface-muted" />
       </div>
     </div>
   );

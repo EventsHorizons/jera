@@ -8,18 +8,18 @@ import {
   GoalEditForm,
   GoalForm,
 } from "@/components/finance/management-forms";
-import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
+import { PrimaryAction } from "@/components/ui/primary-action";
 import {
-  ContributeAction,
-  DeleteFormAction,
-  EditAction,
+  ContributeRowAction,
+  EditRowAction,
+  MoreRowActions,
   RowActions,
 } from "@/components/ui/row-actions";
 import { formatMoney, goalProgress } from "@/lib/finance/calculations";
-import { Plus } from "lucide-react";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 
 type Goal = {
   id: string;
@@ -48,19 +48,15 @@ export function GoalsClient({
     }
   }, [searchParams]);
 
+  const TrashIcon = ActionIcons.destroy.trash;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Metas"
         description="Objetivos de ahorro y avance."
         action={
-          <Button
-            type="button"
-            size="icon"
-            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-            aria-label="Nueva meta"
-            onClick={() => setCreateOpen(true)}
-          />
+          <PrimaryAction label="Nueva meta" onClick={() => setCreateOpen(true)} />
         }
       />
 
@@ -72,7 +68,7 @@ export function GoalsClient({
           onAction={() => setCreateOpen(true)}
         />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {goals.map((goal) => {
             const { remaining, percent, completed } = goalProgress(
               Number(goal.current_amount),
@@ -102,7 +98,8 @@ export function GoalsClient({
                     </p>
                   </div>
                   <RowActions>
-                    <ContributeAction
+                    <ContributeRowAction
+                      entityLabel={goal.name}
                       active={contributeId === goal.id}
                       onClick={() =>
                         setContributeId(
@@ -110,13 +107,32 @@ export function GoalsClient({
                         )
                       }
                     />
-                    <EditAction
+                    <EditRowAction
+                      entityLabel={goal.name}
                       active={editingId === goal.id}
                       onClick={() =>
                         setEditingId(editingId === goal.id ? null : goal.id)
                       }
                     />
-                    <DeleteFormAction action={deleteGoalAction} id={goal.id} />
+                    <MoreRowActions
+                      menuLabel={`Más acciones para ${goal.name}`}
+                      items={[
+                        {
+                          type: "form",
+                          label: "Eliminar meta",
+                          action: deleteGoalAction,
+                          hiddenFields: { id: goal.id },
+                          destructive: true,
+                          confirmMessage: `¿Eliminar la meta "${goal.name}"?`,
+                          icon: (
+                            <TrashIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                      ]}
+                    />
                   </RowActions>
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
@@ -126,7 +142,7 @@ export function GoalsClient({
                   />
                 </div>
                 {contributeId === goal.id ? (
-                  <div className="mt-4 max-w-sm">
+                  <div className="mt-4 max-w-sm border-t border-border/80 pt-4">
                     <GoalContributeForm goalId={goal.id} />
                   </div>
                 ) : null}

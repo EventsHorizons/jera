@@ -15,13 +15,13 @@ import {
   CommandTrigger,
 } from "@/components/layout/command-palette";
 import { cn } from "@/lib/utils/cn";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import {
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
   Menu,
   MoreHorizontal,
-  Plus,
   Receipt,
   Target,
 } from "lucide-react";
@@ -97,7 +97,7 @@ export function AppShell({
               )}
             >
               {sidebarCollapsed ? (
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">
                   <JeraMark size="sm" />
                 </span>
               ) : (
@@ -139,7 +139,7 @@ export function AppShell({
                         "flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm transition-colors",
                         sidebarCollapsed && "justify-center px-2",
                         active
-                          ? "bg-surface-muted font-medium text-text"
+                          ? "bg-primary-soft font-medium text-primary"
                           : "text-text-secondary hover:bg-surface-muted hover:text-text",
                       )}
                     >
@@ -266,7 +266,7 @@ function MobileNavLink({
       href={href}
       className={cn(
         "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium",
-        active ? "text-text" : "text-text-muted",
+        active ? "text-primary" : "text-text-muted",
       )}
     >
       <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.75} />
@@ -277,15 +277,17 @@ function MobileNavLink({
 
 function ExpenseCaptureNavCenter() {
   const { open } = useExpenseCapture();
+  const ExpenseIcon = ActionIcons.finance.expense;
   return (
     <div className="flex flex-1 items-center justify-center">
       <button
         type="button"
         onClick={open}
-        className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white transition active:scale-95"
+        className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary transition hover:bg-primary-hover active:scale-95"
+        style={{ boxShadow: "var(--shadow-primary-glow)" }}
         aria-label="Agregar gasto"
       >
-        <Plus className="h-6 w-6" strokeWidth={2} />
+        <ExpenseIcon className="h-5 w-5" strokeWidth={2} />
       </button>
     </div>
   );

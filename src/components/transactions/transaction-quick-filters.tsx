@@ -34,7 +34,7 @@ export function TransactionQuickFilters({ activeType }: { activeType?: string })
             className={cn(
               "inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition active:scale-[0.98]",
               active
-                ? "bg-zinc-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                ? "bg-primary text-on-primary"
                 : "border border-border/80 bg-surface text-text-secondary hover:bg-surface-muted hover:text-text",
             )}
           >

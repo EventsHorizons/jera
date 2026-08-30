@@ -26,7 +26,7 @@ export function BalanceCard({
             className={cn(
               "h-4 w-4 shrink-0",
               tone === "income" && "text-income",
-              tone === "expense" && "text-expense",
+              tone === "expense" && "text-text-muted",
               tone === "default" && "text-text-muted",
             )}
             strokeWidth={1.75}
@@ -40,7 +40,7 @@ export function BalanceCard({
           className={cn(
             "fc-mono-amount text-2xl font-semibold leading-none tracking-tight md:text-3xl",
             tone === "income" && "text-income",
-            tone === "expense" && "text-expense",
+            tone === "expense" && "text-text",
             tone === "default" && "text-text",
           )}
         >

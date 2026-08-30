@@ -1,34 +1,108 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Jera — Wealth grows quietly */
 :root {
-  --background: #fafafa;
+  color-scheme: light;
+
+  /* 60% neutrals */
+  --background: #f7f8f6;
   --surface: #ffffff;
-  --surface-muted: #f4f4f5;
-  --border: rgba(228, 228, 231, 0.8);
-  --text: #09090b;
-  --text-secondary: #71717a;
-  --text-muted: #a1a1aa;
-  --primary: #09090b;
-  --primary-hover: #18181b;
-  --primary-soft: #f4f4f5;
-  --income: #10b981;
-  --income-soft: #ecfdf5;
-  --expense: #ef4444;
-  --expense-soft: #fef2f2;
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
-  --warning: #d97706;
-  --warning-soft: #fffbeb;
-  --success: #10b981;
-  --success-soft: #ecfdf5;
-  --action: #0284c7;
-  --action-hover: #0369a1;
-  --action-soft: #f0f9ff;
-  /* Layout tokens — 8px engine */
-  --fc-sidebar-w: 15rem; /* 240px */
-  --fc-sidebar-collapsed: 4rem; /* 64px */
-  --fc-mobile-nav-h: 3.5rem; /* 56px */
-  --fc-mobile-dock-h: 4rem; /* 64px */
+  --surface-muted: #eef1ef;
+  --border: #e1e6e3;
+
+  /* Typography */
+  --text: #17201d;
+  --text-secondary: #68736e;
+  --text-muted: #9aa39e;
+
+  /* 10% brand — progress, trust, primary actions */
+  --primary: #2f6b5f;
+  --primary-hover: #245349;
+  --primary-soft: #e5f0ec;
+  --on-primary: #ffffff;
+
+  /* Semantic: progress & positive */
+  --income: #2f6b5f;
+  --income-soft: #e5f0ec;
+
+  /* Expenses are information, not punishment */
+  --expense: #68736e;
+  --expense-soft: #eef1ef;
+
+  /* Destructive & warnings */
+  --danger: #b84040;
+  --danger-soft: #faf0f0;
+  --warning: #9a7b2e;
+  --warning-soft: #f8f4e8;
+
+  --success: #2f6b5f;
+  --success-soft: #e5f0ec;
+
+  --action: #2f6b5f;
+  --action-hover: #245349;
+  --action-soft: #e5f0ec;
+
+  /* Depth */
+  --shadow-card: 0 1px 2px rgba(23, 32, 29, 0.04);
+  --shadow-elevated: 0 12px 40px rgba(23, 32, 29, 0.08);
+  --shadow-overlay: rgba(23, 32, 29, 0.35);
+  --shadow-primary-glow: 0 2px 10px rgba(47, 107, 95, 0.22);
+
+  /* Radius */
+  --radius-input: 0.625rem;
+  --radius-button: 0.75rem;
+  --radius-card: 1rem;
+  --radius-modal: 1.25rem;
+
+  /* Layout */
+  --fc-sidebar-w: 15rem;
+  --fc-sidebar-collapsed: 4rem;
+  --fc-mobile-nav-h: 3.5rem;
+  --fc-mobile-dock-h: 4rem;
+}
+
+/* Dark — bosque nocturno: profundo, calmado, acentos bioluminiscentes */
+.dark {
+  color-scheme: dark;
+
+  --background: #0c1110;
+  --surface: #151d1b;
+  --surface-muted: #1c2724;
+  --border: #2a3531;
+
+  --text: #e8edeb;
+  --text-secondary: #9aaba3;
+  --text-muted: #6b7a73;
+
+  --primary: #5ba894;
+  --primary-hover: #6ec4a8;
+  --primary-soft: #1a2e28;
+  --on-primary: #0c1110;
+
+  --income: #6ec4a8;
+  --income-soft: #1a2e28;
+
+  --expense: #9aaba3;
+  --expense-soft: #1c2421;
+
+  --danger: #e07070;
+  --danger-soft: #2a1c1c;
+  --warning: #c9a84d;
+  --warning-soft: #2a2618;
+
+  --success: #6ec4a8;
+  --success-soft: #1a2e28;
+
+  --action: #5ba894;
+  --action-hover: #6ec4a8;
+  --action-soft: #1a2e28;
+
+  --shadow-card: 0 1px 0 rgba(91, 168, 148, 0.06), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-overlay: rgba(0, 0, 0, 0.62);
+  --shadow-primary-glow: 0 0 24px rgba(91, 168, 148, 0.28), 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {
@@ -42,6 +116,7 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
   --color-income: var(--income);
   --color-income-soft: var(--income-soft);
   --color-expense: var(--expense);
@@ -68,6 +143,8 @@ body {
   color: var(--text);
   font-family: var(--font-inter), system-ui, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 input,
@@ -91,11 +168,10 @@ button {
 
   @media (min-width: 640px) {
     .fc-main {
-      padding-bottom: 2rem; /* 32px — tablet+ clears dock/nav */
+      padding-bottom: 2rem;
     }
   }
 
-  /* 12-col bento: 16px mobile/tablet, 24px desktop */
   .fc-bento-grid {
     @apply grid grid-cols-12 gap-4 lg:gap-6;
   }
@@ -105,11 +181,13 @@ button {
   }
 
   .fc-panel {
-    @apply rounded-2xl border border-border/80 bg-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+    @apply rounded-2xl border border-border/80 bg-surface p-5;
+    box-shadow: var(--shadow-card);
   }
 
   .fc-card {
-    @apply rounded-2xl border border-border/80 bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+    @apply rounded-2xl border border-border/80 bg-surface;
+    box-shadow: var(--shadow-card);
   }
 
   .fc-card-muted {
@@ -125,7 +203,8 @@ button {
   }
 
   .fc-list {
-    @apply divide-y divide-border/80 overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+    @apply divide-y divide-border/80 overflow-hidden rounded-2xl border border-border/80 bg-surface;
+    box-shadow: var(--shadow-card);
   }
 
   .fc-list-row {
@@ -133,7 +212,7 @@ button {
   }
 
   .fc-hero-amount {
-    @apply font-mono text-4xl font-semibold tabular-nums tracking-tight text-text md:text-5xl;
+    @apply font-mono text-3xl font-semibold tabular-nums tracking-tight text-text sm:text-4xl;
   }
 
   .fc-mono-amount {
@@ -141,7 +220,7 @@ button {
   }
 
   .fc-link {
-    @apply text-text transition-colors hover:text-text-secondary;
+    @apply text-text-secondary transition-colors hover:text-primary;
   }
 
   .fc-page-title {
@@ -165,19 +244,60 @@ button {
   }
 
   .fc-badge-expense {
-    @apply inline-flex items-center rounded-full bg-expense-soft px-2 py-1 text-xs font-medium text-expense;
+    @apply inline-flex items-center rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-text-secondary;
+  }
+
+  .fc-badge-neutral {
+    @apply inline-flex items-center rounded-full bg-surface-muted px-2 py-1 text-xs font-medium text-text-secondary;
+  }
+
+  .fc-progress-track {
+    @apply h-1.5 overflow-hidden rounded-full bg-surface-muted;
+  }
+
+  .fc-progress-fill {
+    @apply h-full rounded-full bg-primary transition-all duration-500 ease-out;
   }
 
   .fc-btn-ai {
-    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:bg-zinc-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-zinc-300;
+    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-on-primary transition hover:bg-primary-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    box-shadow: var(--shadow-primary-glow);
   }
 
   .fc-btn-ai-secondary {
-    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface-muted px-5 text-sm font-medium text-text transition hover:bg-zinc-100 active:scale-[0.98];
+    @apply inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface px-5 text-sm font-medium text-text transition hover:bg-surface-muted active:scale-[0.98];
   }
 
   .fc-touch-target {
-    @apply inline-flex min-h-11 min-w-11 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10;
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25;
+  }
+
+  .fc-overlay {
+    background: var(--shadow-overlay);
+  }
+
+  .fc-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .fc-insight-panel {
+    @apply overflow-hidden rounded-2xl border border-border/80 bg-primary text-on-primary;
+  }
+
+  .dark .fc-insight-panel {
+    background: linear-gradient(
+      155deg,
+      #1f3832 0%,
+      #151d1b 45%,
+      #0c1110 100%
+    );
+    border-color: rgba(91, 168, 148, 0.18);
+    color: var(--text);
+  }
+
+  .fc-command-surface {
+    @apply overflow-hidden rounded-xl border border-border/80 bg-surface;
+    box-shadow: var(--shadow-elevated);
   }
 
   .fc-mobile-dock {
@@ -197,5 +317,16 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fc-progress {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
   }
 }

@@ -314,32 +314,32 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-start justify-center bg-zinc-950/40 px-4 pt-[12vh] backdrop-blur-[2px]"
+      className="fc-overlay fixed inset-0 z-[120] flex items-start justify-center px-4 pt-[12vh] backdrop-blur-[2px]"
       onClick={close}
       role="dialog"
       aria-modal="true"
       aria-label="Menú de comandos"
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]"
+        className="fc-command-surface w-full max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-zinc-200 px-3">
-          <Search className="h-4 w-4 shrink-0 text-zinc-400" strokeWidth={1.75} />
+        <div className="flex items-center gap-2 border-b border-border px-3">
+          <Search className="h-4 w-4 shrink-0 text-text-muted" strokeWidth={1.75} />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar comando…"
-            className="h-12 w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
+            className="h-12 w-full bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
           />
-          <kbd className="hidden rounded border border-zinc-200 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 sm:inline">
+          <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-text-muted sm:inline">
             esc
           </kbd>
           <button
             type="button"
             onClick={close}
-            className="fc-touch-target text-zinc-400 hover:text-zinc-700 sm:hidden"
+            className="fc-touch-target text-text-muted hover:text-text sm:hidden"
             aria-label="Cerrar"
           >
             <X className="h-4 w-4" />
@@ -347,13 +347,13 @@ export function CommandPalette({
         </div>
         <div className="max-h-[min(60vh,22rem)] overflow-y-auto py-2">
           {filtered.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-zinc-500">
+            <p className="px-4 py-6 text-center text-sm text-text-secondary">
               Sin resultados
             </p>
           ) : (
             groups.map((group) => (
               <div key={group} className="mb-1">
-                <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                <p className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-text-muted">
                   {group}
                 </p>
                 <ul>
@@ -371,17 +371,17 @@ export function CommandPalette({
                             className={cn(
                               "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
                               idx === active
-                                ? "bg-zinc-100 text-zinc-900"
-                                : "text-zinc-700 hover:bg-zinc-50",
+                                ? "bg-primary-soft text-text"
+                                : "text-text-secondary hover:bg-surface-muted",
                             )}
                           >
                             <Icon
-                              className="h-4 w-4 shrink-0 text-zinc-400"
+                              className="h-4 w-4 shrink-0 text-text-muted"
                               strokeWidth={1.75}
                             />
                             <span className="flex-1">{cmd.label}</span>
                             {cmd.hint ? (
-                              <kbd className="rounded border border-zinc-200 px-1.5 font-mono text-[10px] text-zinc-400">
+                              <kbd className="rounded border border-border px-1.5 font-mono text-[10px] text-text-muted">
                                 {cmd.hint}
                               </kbd>
                             ) : null}
@@ -394,7 +394,7 @@ export function CommandPalette({
             ))
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-zinc-200 px-3 py-2 text-[11px] text-zinc-400">
+        <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[11px] text-text-muted">
           <span>↑↓ navegar · ↵ ejecutar</span>
           <span className="hidden items-center gap-2 sm:flex">
             Moneda
@@ -414,13 +414,13 @@ export function CommandTrigger({ className }: { className?: string }) {
         document.dispatchEvent(new Event("jera:open-command"));
       }}
       className={cn(
-        "flex h-9 flex-1 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500 transition hover:bg-zinc-100 lg:max-w-sm",
+        "flex h-9 flex-1 items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 text-sm text-text-secondary transition hover:bg-surface lg:max-w-sm",
         className,
       )}
     >
       <Search className="h-3.5 w-3.5" strokeWidth={1.75} />
       <span className="flex-1 text-left">Buscar o crear…</span>
-      <kbd className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px]">
+      <kbd className="rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
         ⌘K
       </kbd>
     </button>

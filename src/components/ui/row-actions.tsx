@@ -1,20 +1,15 @@
 "use client";
 
+import { ActionMenu, type ActionMenuItem } from "@/components/ui/action-menu";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ActionIcons, actionLabel } from "@/lib/ui/action-grammar";
 import { cn } from "@/lib/utils/cn";
-import {
-  Archive,
-  Banknote,
-  Pencil,
-  Plus,
-  Receipt,
-  RotateCcw,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+
+export type { ActionMenuItem };
 
 export function RowActions({
   className,
@@ -28,18 +23,22 @@ export function RowActions({
   );
 }
 
-export function EditAction({
+export function EditRowAction({
+  entityLabel,
   active,
   onClick,
-  label = "Editar",
 }: {
+  entityLabel: string;
   active?: boolean;
   onClick: () => void;
-  label?: string;
 }) {
+  const label = active
+    ? `Cerrar edición de ${entityLabel}`
+    : actionLabel("Editar", entityLabel);
+
   return (
     <IconButton
-      label={active ? "Cerrar" : label}
+      label={label}
       variant={active ? "secondary" : "ghost"}
       onClick={onClick}
     >
@@ -52,129 +51,62 @@ export function EditAction({
   );
 }
 
-export function DeleteFormAction({
-  action,
-  id,
-  label = "Eliminar",
-  disabled,
+export function MoreRowActions({
+  menuLabel,
+  items,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
-  id: string;
-  label?: string;
-  disabled?: boolean;
+  menuLabel: string;
+  items: ActionMenuItem[];
 }) {
-  return (
-    <form action={action} className="inline-flex">
-      <input type="hidden" name="id" value={id} />
-      <IconButton
-        type="submit"
-        label={label}
-        variant="danger"
-        disabled={disabled}
-        tooltip
-      >
-        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-      </IconButton>
-    </form>
-  );
+  return <ActionMenu label={menuLabel} items={items} align="end" />;
 }
 
-export function ArchiveFormAction({
-  action,
-  id,
-  disabled,
-}: {
-  action: (formData: FormData) => void | Promise<void>;
-  id: string;
-  disabled?: boolean;
-}) {
-  return (
-    <form action={action} className="inline-flex">
-      <input type="hidden" name="id" value={id} />
-      <IconButton
-        type="submit"
-        label="Archivar"
-        variant="ghost"
-        disabled={disabled}
-      >
-        <Archive className="h-4 w-4" strokeWidth={1.75} />
-      </IconButton>
-    </form>
-  );
-}
-
-export function RestoreFormAction({
-  action,
-  id,
-  disabled,
-}: {
-  action: (formData: FormData) => void | Promise<void>;
-  id: string;
-  disabled?: boolean;
-}) {
-  return (
-    <form action={action} className="inline-flex">
-      <input type="hidden" name="id" value={id} />
-      <IconButton
-        type="submit"
-        label="Restaurar"
-        variant="ghost"
-        disabled={disabled}
-      >
-        <RotateCcw className="h-4 w-4" strokeWidth={1.75} />
-      </IconButton>
-    </form>
-  );
-}
-
-export function ContributeAction({
+export function ContributeRowAction({
+  entityLabel,
   active,
   onClick,
 }: {
+  entityLabel: string;
   active?: boolean;
   onClick: () => void;
 }) {
+  const Icon = ActionIcons.finance.contribute;
+  const label = active
+    ? `Cerrar aporte a ${entityLabel}`
+    : actionLabel("Aportar a", entityLabel);
+
   return (
     <IconButton
-      label={active ? "Cerrar aporte" : "Aportar"}
+      label={label}
       variant={active ? "secondary" : "ghost"}
       onClick={onClick}
     >
-      <Plus className="h-4 w-4" strokeWidth={1.75} />
+      <Icon className="h-4 w-4" strokeWidth={1.75} />
     </IconButton>
   );
 }
 
-export function PayAction({
+export function PayRowAction({
+  entityLabel,
   active,
   onClick,
 }: {
+  entityLabel: string;
   active?: boolean;
   onClick: () => void;
 }) {
+  const Icon = ActionIcons.finance.payment;
+  const label = active
+    ? `Cerrar pago de ${entityLabel}`
+    : actionLabel("Registrar pago de", entityLabel);
+
   return (
     <IconButton
-      label={active ? "Cerrar pago" : "Registrar pago"}
+      label={label}
       variant={active ? "secondary" : "ghost"}
       onClick={onClick}
     >
-      <Banknote className="h-4 w-4" strokeWidth={1.75} />
+      <Icon className="h-4 w-4" strokeWidth={1.75} />
     </IconButton>
-  );
-}
-
-export function ViewTransactionsLink({ href }: { href: string }) {
-  return (
-    <Tooltip label="Ver movimientos">
-      <Link
-        href={href}
-        aria-label="Ver movimientos"
-        className={cn(
-          "inline-flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition hover:bg-surface-muted hover:text-text",
-        )}
-      >
-        <Receipt className="h-4 w-4" strokeWidth={1.75} />
-      </Link>
-    </Tooltip>
   );
 }

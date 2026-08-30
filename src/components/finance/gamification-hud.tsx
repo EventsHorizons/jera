@@ -73,9 +73,9 @@ export function GamificationHud({
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-300",
-                tone === "stable" && "bg-zinc-900",
-                tone === "attention" && "bg-zinc-500",
-                tone === "critical" && "bg-expense",
+                tone === "stable" && "bg-primary",
+                tone === "attention" && "bg-warning/80",
+                tone === "critical" && "bg-warning",
               )}
               style={{ width: `${Math.min(100, Math.max(0, healthScore))}%` }}
             />
@@ -95,7 +95,7 @@ export function GamificationHud({
           <p className="mt-1 fc-mono-amount text-sm font-medium">{xpTotal} XP</p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
             <div
-              className="h-full rounded-full bg-zinc-900 transition-all duration-300"
+              className="h-full rounded-full bg-primary transition-all duration-300"
               style={{ width: `${xpProgress}%` }}
             />
           </div>
@@ -116,7 +116,7 @@ export function GamificationHud({
               });
             }}
           >
-            Revisar presupuesto (check-in)
+            Revisar presupuesto
           </Button>
           {message ? (
             <span className="text-xs text-text-secondary">{message}</span>

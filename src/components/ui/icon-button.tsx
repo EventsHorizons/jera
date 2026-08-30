@@ -14,11 +14,11 @@ type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   ghost:
-    "text-text-secondary hover:bg-surface-muted hover:text-text focus-visible:ring-2 focus-visible:ring-zinc-900/10",
+    "text-text-secondary hover:bg-surface-muted hover:text-text focus-visible:ring-2 focus-visible:ring-primary/20",
   secondary:
-    "border border-border/80 bg-surface text-text-secondary hover:bg-surface-muted hover:text-text focus-visible:ring-2 focus-visible:ring-zinc-900/10",
+    "border border-border/80 bg-surface text-text-secondary hover:bg-surface-muted hover:text-text focus-visible:ring-2 focus-visible:ring-primary/20",
   danger:
-    "text-text-muted hover:bg-expense-soft hover:text-expense focus-visible:ring-2 focus-visible:ring-expense/20",
+    "text-text-muted hover:bg-danger-soft hover:text-danger focus-visible:ring-2 focus-visible:ring-danger/20",
 };
 
 const sizes = {

@@ -55,7 +55,7 @@ export function TransactionForm({
             onClick={() => setMode(value)}
             className={`rounded-full px-4 py-2 text-sm transition active:scale-[0.98] ${
               mode === value
-                ? "bg-zinc-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                ? "bg-primary text-on-primary"
                 : "border border-border/80 text-text-secondary hover:bg-surface-muted"
             }`}
           >

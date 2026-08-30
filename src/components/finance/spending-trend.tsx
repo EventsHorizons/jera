@@ -26,7 +26,7 @@ export function SpendingTrend({
             <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
               <div className="flex h-20 w-full items-end">
                 <div
-                  className="w-full rounded-sm bg-zinc-900/90 transition-all"
+                  className="w-full rounded-sm bg-primary/75 transition-all"
                   style={{ height: `${height}%` }}
                   title={`${point.label}: ${point.value}`}
                 />

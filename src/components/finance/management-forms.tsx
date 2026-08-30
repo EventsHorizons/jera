@@ -22,8 +22,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DeleteFormAction,
-  EditAction,
+  EditRowAction,
+  MoreRowActions,
   RowActions,
 } from "@/components/ui/row-actions";
 import { Select } from "@/components/ui/select";
@@ -31,6 +31,8 @@ import {
   currentMonthPeriod,
   todayISODate,
 } from "@/lib/finance/calculations";
+import { ActionIcons } from "@/lib/ui/action-grammar";
+
 import type { ActionState } from "@/lib/utils/errors";
 
 const initialState: ActionState = {};
@@ -247,12 +249,32 @@ export function CategoryList({
                 <span className="ml-2 text-xs text-text-muted">{c.kind}</span>
               </span>
               <RowActions>
-                <EditAction
+                <EditRowAction
+                  entityLabel={`categoría ${c.name}`}
                   active={editId === c.id}
                   onClick={() => setEditId(editId === c.id ? null : c.id)}
                 />
                 {!c.is_system ? (
-                  <DeleteFormAction action={deleteAction} id={c.id} disabled={deleting} />
+                  <MoreRowActions
+                    menuLabel={`Acciones para ${c.name}`}
+                    items={[
+                      {
+                        type: "form",
+                        label: "Eliminar categoría",
+                        action: deleteAction,
+                        hiddenFields: { id: c.id },
+                        disabled: deleting,
+                        destructive: true,
+                        confirmMessage: `¿Eliminar la categoría "${c.name}"?`,
+                        icon: (
+                          <ActionIcons.destroy.trash
+                            className="h-4 w-4 shrink-0"
+                            strokeWidth={1.75}
+                          />
+                        ),
+                      },
+                    ]}
+                  />
                 ) : null}
               </RowActions>
             </div>

@@ -6,20 +6,20 @@ import {
   BudgetEditForm,
   BudgetForm,
 } from "@/components/finance/management-forms";
-import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
+import { PrimaryAction } from "@/components/ui/primary-action";
 import {
-  DeleteFormAction,
-  EditAction,
+  EditRowAction,
+  MoreRowActions,
   RowActions,
 } from "@/components/ui/row-actions";
 import {
   budgetProgress,
   formatMoney,
 } from "@/lib/finance/calculations";
-import { Plus } from "lucide-react";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import Link from "next/link";
 
 type BudgetRow = {
@@ -51,17 +51,16 @@ export function BudgetsClient({
     0,
   );
 
+  const TrashIcon = ActionIcons.destroy.trash;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Presupuestos"
         description={periodLabel}
         action={
-          <Button
-            type="button"
-            size="icon"
-            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-            aria-label="Nuevo presupuesto"
+          <PrimaryAction
+            label="Nuevo presupuesto"
             onClick={() => setCreateOpen(true)}
           />
         }
@@ -78,7 +77,7 @@ export function BudgetsClient({
           </p>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
             <div
-              className="h-full rounded-full bg-zinc-900 transition-all"
+              className="h-full rounded-full bg-primary transition-all"
               style={{
                 width: `${totalLimit > 0 ? Math.min(100, (totalSpent / totalLimit) * 100) : 0}%`,
               }}
@@ -117,26 +116,56 @@ export function BudgetsClient({
                     </p>
                     <p
                       className={`mt-1 text-xs font-medium ${
-                        over ? "text-expense" : "text-text-secondary"
+                        over ? "text-warning" : "text-text-secondary"
                       }`}
                     >
                       {over ? "Superado" : `${formatMoney(remaining)} restantes`}
                     </p>
                   </div>
                   <RowActions>
-                    <EditAction
+                    <EditRowAction
+                      entityLabel={`presupuesto ${name}`}
                       active={editingId === budget.id}
                       onClick={() =>
                         setEditingId(editingId === budget.id ? null : budget.id)
                       }
                     />
-                    <DeleteFormAction action={deleteBudgetAction} id={budget.id} />
+                    <MoreRowActions
+                      menuLabel={`Más acciones para ${name}`}
+                      items={[
+                        {
+                          type: "link",
+                          label: "Ver gastos",
+                          href: `/transactions?category=${budget.category_id}&type=expense`,
+                          icon: (
+                            <ActionIcons.finance.expense
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                        {
+                          type: "form",
+                          label: "Eliminar presupuesto",
+                          action: deleteBudgetAction,
+                          hiddenFields: { id: budget.id },
+                          destructive: true,
+                          confirmMessage: `¿Eliminar el presupuesto de ${name}?`,
+                          icon: (
+                            <TrashIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                      ]}
+                    />
                   </RowActions>
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      over ? "bg-expense" : percent >= 80 ? "bg-warning" : "bg-zinc-900"
+                      over ? "bg-warning" : percent >= 80 ? "bg-warning/70" : "bg-primary"
                     }`}
                     style={{ width: `${Math.min(100, percent)}%` }}
                   />

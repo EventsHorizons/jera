@@ -7,18 +7,18 @@ import {
   DebtForm,
   DebtPayForm,
 } from "@/components/finance/management-forms";
-import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
+import { PrimaryAction } from "@/components/ui/primary-action";
 import {
-  DeleteFormAction,
-  EditAction,
-  PayAction,
+  EditRowAction,
+  MoreRowActions,
+  PayRowAction,
   RowActions,
 } from "@/components/ui/row-actions";
 import { formatMoney } from "@/lib/finance/calculations";
-import { Plus } from "lucide-react";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 
 type Debt = {
   id: string;
@@ -46,17 +46,16 @@ export function DebtsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<string | null>(null);
 
+  const TrashIcon = ActionIcons.destroy.trash;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Deudas"
         description="Compromisos pendientes y pagos."
         action={
-          <Button
-            type="button"
-            size="icon"
-            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-            aria-label="Registrar deuda"
+          <PrimaryAction
+            label="Registrar deuda"
             onClick={() => setCreateOpen(true)}
           />
         }
@@ -100,19 +99,39 @@ export function DebtsClient({
                     ) : null}
                   </div>
                   <RowActions>
-                    <PayAction
+                    <PayRowAction
+                      entityLabel={debt.name}
                       active={payingId === debt.id}
                       onClick={() =>
                         setPayingId(payingId === debt.id ? null : debt.id)
                       }
                     />
-                    <EditAction
+                    <EditRowAction
+                      entityLabel={debt.name}
                       active={editingId === debt.id}
                       onClick={() =>
                         setEditingId(editingId === debt.id ? null : debt.id)
                       }
                     />
-                    <DeleteFormAction action={deleteDebtAction} id={debt.id} />
+                    <MoreRowActions
+                      menuLabel={`Más acciones para ${debt.name}`}
+                      items={[
+                        {
+                          type: "form",
+                          label: "Eliminar deuda",
+                          action: deleteDebtAction,
+                          hiddenFields: { id: debt.id },
+                          destructive: true,
+                          confirmMessage: `¿Eliminar "${debt.name}"?`,
+                          icon: (
+                            <TrashIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                      ]}
+                    />
                   </RowActions>
                 </div>
                 {payingId === debt.id ? (

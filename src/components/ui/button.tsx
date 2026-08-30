@@ -10,17 +10,17 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   primary:
-    "bg-zinc-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-zinc-800 disabled:bg-zinc-300",
+    "bg-primary text-on-primary hover:bg-primary-hover disabled:opacity-50",
   secondary:
-    "border border-border/80 bg-surface-muted text-text hover:bg-zinc-100",
-  tertiary: "bg-surface-muted text-text hover:bg-zinc-200/80 disabled:opacity-60",
+    "border border-border/80 bg-surface text-text hover:bg-surface-muted",
+  tertiary: "bg-surface-muted text-text hover:bg-border/40 disabled:opacity-60",
   ghost: "text-text-secondary hover:bg-surface-muted hover:text-text",
-  danger: "bg-expense text-white hover:bg-expense/90",
+  danger: "bg-danger text-white hover:bg-danger/90",
 };
 
 const sizes = {
   default: "h-11 min-h-11 rounded-xl px-5 text-sm",
-  sm: "h-9 min-h-9 rounded-lg px-3 text-xs",
+  sm: "h-9 min-h-9 rounded-[10px] px-3 text-xs",
   icon: "h-9 w-9 min-h-9 min-w-9 rounded-xl p-0",
 };
 
@@ -39,7 +39,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 font-medium transition active:scale-[0.98] disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10",
+        "inline-flex items-center justify-center gap-2 font-medium transition active:scale-[0.98] disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
         variants[variant],
         sizes[size],
         className,
@@ -48,7 +48,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <span className="text-sm">…</span>
+        <span className="text-sm opacity-70">Guardando…</span>
       ) : showIconOnly ? (
         icon
       ) : (

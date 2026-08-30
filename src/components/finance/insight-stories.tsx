@@ -22,31 +22,31 @@ export function InsightStories({ stories }: { stories: Story[] }) {
   const story = stories[Math.min(index, stories.length - 1)]!;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border/80 bg-zinc-900 text-white">
+    <section className="fc-insight-panel">
       <div className="flex gap-1 px-4 pt-3">
         {stories.map((s, i) => (
           <div
             key={s.id}
             className={`h-1 flex-1 rounded-full ${
-              i <= index ? "bg-white" : "bg-white/25"
+              i <= index ? "bg-primary" : "bg-border"
             }`}
           />
         ))}
       </div>
       <div className="space-y-3 px-5 py-6">
-        <p className="text-[11px] uppercase tracking-wider text-white/50">
+        <p className="text-[11px] uppercase tracking-wider text-text-muted">
           Insight · {story.kind}
         </p>
         <h2 className="text-xl font-semibold leading-snug tracking-tight">
           {story.title}
         </h2>
-        <p className="text-sm leading-relaxed text-white/75">{story.body}</p>
+        <p className="text-sm leading-relaxed text-text-secondary">{story.body}</p>
         <div className="flex flex-wrap gap-2 pt-2">
           {index < stories.length - 1 ? (
             <Button
               type="button"
               variant="secondary"
-              className="bg-white text-zinc-900 hover:bg-zinc-100"
+              className="bg-surface text-primary hover:bg-primary-soft"
               onClick={() => setIndex((v) => v + 1)}
             >
               Siguiente
@@ -56,7 +56,7 @@ export function InsightStories({ stories }: { stories: Story[] }) {
             type="button"
             variant="secondary"
             loading={pending}
-            className="border border-white/30 bg-transparent text-white hover:bg-white/10"
+            className="border border-border/50 bg-transparent text-text hover:bg-surface-muted"
             onClick={() => {
               startTransition(async () => {
                 const fd = new FormData();

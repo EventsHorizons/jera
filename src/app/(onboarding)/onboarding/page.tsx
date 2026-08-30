@@ -6,9 +6,9 @@ export default function OnboardingPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Bienvenido a {APP_NAME}</h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Tu espacio privado para saber cuánto dinero tienes, dónde está y qué
-          compromisos financieros tienes.
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
+          Primero entiende tu dinero. Después decide qué hacer con él. Empecemos
+          con lo esencial: cuánto tienes y dónde está.
         </p>
       </div>
       <OnboardingForm />

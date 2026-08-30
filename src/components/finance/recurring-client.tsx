@@ -14,12 +14,13 @@ import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { IconButton } from "@/components/ui/icon-button";
 import { PageHeader } from "@/components/ui/page-header";
-import { RowActions } from "@/components/ui/row-actions";
+import { PrimaryAction } from "@/components/ui/primary-action";
+import { MoreRowActions, RowActions } from "@/components/ui/row-actions";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { todayISODate } from "@/lib/finance/calculations";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import type { ActionState } from "@/lib/utils/errors";
-import { Pause, Play, Plus, RefreshCw, X } from "lucide-react";
 
 const initialState: ActionState = {};
 
@@ -68,31 +69,32 @@ export function RecurringClient({
   }));
   const cats = categories.filter((c) => c.kind === type);
 
+  const PauseIcon = ActionIcons.state.pause;
+  const PlayIcon = ActionIcons.state.resume;
+  const CancelIcon = ActionIcons.nav.close;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Recurrentes"
         description="Pagos e ingresos que se repiten."
         action={
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <form action={genAction}>
               <IconButton
                 type="submit"
-                label="Generar pendientes"
+                label="Generar movimientos pendientes"
                 variant="secondary"
                 disabled={generating}
               >
-                <RefreshCw
+                <ActionIcons.finance.movement
                   className={`h-4 w-4 ${generating ? "animate-spin" : ""}`}
                   strokeWidth={1.75}
                 />
               </IconButton>
             </form>
-            <Button
-              type="button"
-              size="icon"
-              icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-              aria-label="Nueva recurrente"
+            <PrimaryAction
+              label="Nueva recurrente"
               onClick={() => setCreateOpen(true)}
             />
           </div>
@@ -106,54 +108,76 @@ export function RecurringClient({
         <EmptyPanel
           title="Sin recurrentes"
           description="Registra salario, alquiler o suscripciones."
-          actionLabel="Crear"
+          actionLabel="Crear recurrente"
           onAction={() => setCreateOpen(true)}
         />
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border/80 bg-surface">
-          {rules.map((rule) => (
-            <li key={rule.id} className="px-4 py-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">
-                    {rule.description || rule.type}
-                  </p>
-                  <p className="fc-amount mt-1 text-lg font-semibold">
-                    {Number(rule.amount).toFixed(2)}
-                  </p>
-                  <p className="text-sm text-text-muted">
-                    {FREQ[rule.frequency] ?? rule.frequency} · {rule.next_occurrence}
-                  </p>
+          {rules.map((rule) => {
+            const name = rule.description || rule.type;
+            return (
+              <li key={rule.id} className="px-4 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{name}</p>
+                    <p className="fc-amount mt-1 text-lg font-semibold">
+                      {Number(rule.amount).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-text-muted">
+                      {FREQ[rule.frequency] ?? rule.frequency} · {rule.next_occurrence}
+                    </p>
+                  </div>
+                  <RowActions>
+                    {rule.status === "active" ? (
+                      <form action={pauseRecurringAction} className="inline-flex">
+                        <input type="hidden" name="id" value={rule.id} />
+                        <IconButton
+                          type="submit"
+                          label={`Pausar ${name}`}
+                          variant="ghost"
+                        >
+                          <PauseIcon className="h-4 w-4" strokeWidth={1.75} />
+                        </IconButton>
+                      </form>
+                    ) : null}
+                    {rule.status === "paused" ? (
+                      <form action={resumeRecurringAction} className="inline-flex">
+                        <input type="hidden" name="id" value={rule.id} />
+                        <IconButton
+                          type="submit"
+                          label={`Reanudar ${name}`}
+                          variant="ghost"
+                        >
+                          <PlayIcon className="h-4 w-4" strokeWidth={1.75} />
+                        </IconButton>
+                      </form>
+                    ) : null}
+                    {rule.status !== "cancelled" ? (
+                      <MoreRowActions
+                        menuLabel={`Más acciones para ${name}`}
+                        items={[
+                          {
+                            type: "form",
+                            label: "Cancelar recurrente",
+                            action: cancelRecurringAction,
+                            hiddenFields: { id: rule.id },
+                            destructive: true,
+                            confirmMessage: `¿Cancelar "${name}"?`,
+                            icon: (
+                              <CancelIcon
+                                className="h-4 w-4 shrink-0"
+                                strokeWidth={1.75}
+                              />
+                            ),
+                          },
+                        ]}
+                      />
+                    ) : null}
+                  </RowActions>
                 </div>
-                <RowActions>
-                  {rule.status === "active" ? (
-                    <form action={pauseRecurringAction} className="inline-flex">
-                      <input type="hidden" name="id" value={rule.id} />
-                      <IconButton type="submit" label="Pausar" variant="ghost">
-                        <Pause className="h-4 w-4" strokeWidth={1.75} />
-                      </IconButton>
-                    </form>
-                  ) : null}
-                  {rule.status === "paused" ? (
-                    <form action={resumeRecurringAction} className="inline-flex">
-                      <input type="hidden" name="id" value={rule.id} />
-                      <IconButton type="submit" label="Reanudar" variant="ghost">
-                        <Play className="h-4 w-4" strokeWidth={1.75} />
-                      </IconButton>
-                    </form>
-                  ) : null}
-                  {rule.status !== "cancelled" ? (
-                    <form action={cancelRecurringAction} className="inline-flex">
-                      <input type="hidden" name="id" value={rule.id} />
-                      <IconButton type="submit" label="Cancelar" variant="danger">
-                        <X className="h-4 w-4" strokeWidth={1.75} />
-                      </IconButton>
-                    </form>
-                  ) : null}
-                </RowActions>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
 

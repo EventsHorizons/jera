@@ -8,25 +8,22 @@ import {
 } from "@/app/actions/finance";
 import { AccountForm } from "@/components/finance/account-form";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyPanel } from "@/components/ui/empty-panel";
 import { PageHeader } from "@/components/ui/page-header";
+import { PrimaryAction } from "@/components/ui/primary-action";
 import {
-  ArchiveFormAction,
-  DeleteFormAction,
-  EditAction,
-  RestoreFormAction,
+  EditRowAction,
+  MoreRowActions,
   RowActions,
-  ViewTransactionsLink,
 } from "@/components/ui/row-actions";
 import {
   ACCOUNT_TYPE_LABELS,
   formatMoney,
 } from "@/lib/finance/calculations";
+import { ActionIcons } from "@/lib/ui/action-grammar";
 import type { ActionState } from "@/lib/utils/errors";
 import type { AccountWithBalanceRow } from "@/types/database";
-import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const initialState: ActionState = {};
@@ -70,18 +67,18 @@ export function AccountsManager({
   const flashSuccess =
     deleteState.success || archiveState.success || restoreState.success;
 
+  const ArchiveIcon = ActionIcons.state.archive;
+  const TrashIcon = ActionIcons.destroy.trash;
+  const MovementIcon = ActionIcons.finance.movement;
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Cuentas"
         description="Dónde está tu dinero."
         action={
-          <Button
-            type="button"
-            size="icon"
-            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
-            aria-label="Nueva cuenta"
-            title="Nueva cuenta"
+          <PrimaryAction
+            label="Agregar cuenta"
             onClick={() => setCreateOpen(true)}
           />
         }
@@ -114,10 +111,8 @@ export function AccountsManager({
                     {formatMoney(Number(account.current_balance), account.currency)}
                   </p>
                   <RowActions>
-                    <ViewTransactionsLink
-                      href={`/transactions?account=${account.id}`}
-                    />
-                    <EditAction
+                    <EditRowAction
+                      entityLabel={account.name}
                       active={editingId === account.id}
                       onClick={() =>
                         setEditingId(
@@ -125,15 +120,49 @@ export function AccountsManager({
                         )
                       }
                     />
-                    <ArchiveFormAction
-                      action={archiveAction}
-                      id={account.id}
-                      disabled={archiving}
-                    />
-                    <DeleteFormAction
-                      action={deleteAction}
-                      id={account.id}
-                      disabled={deleting}
+                    <MoreRowActions
+                      menuLabel={`Más acciones para ${account.name}`}
+                      items={[
+                        {
+                          type: "link",
+                          label: "Ver movimientos",
+                          href: `/transactions?account=${account.id}`,
+                          icon: (
+                            <MovementIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                        {
+                          type: "form",
+                          label: "Archivar",
+                          action: archiveAction,
+                          hiddenFields: { id: account.id },
+                          disabled: archiving,
+                          icon: (
+                            <ArchiveIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                        {
+                          type: "form",
+                          label: "Eliminar cuenta",
+                          action: deleteAction,
+                          hiddenFields: { id: account.id },
+                          disabled: deleting,
+                          destructive: true,
+                          confirmMessage: `¿Eliminar la cuenta "${account.name}"? Esta acción no se puede deshacer.`,
+                          icon: (
+                            <TrashIcon
+                              className="h-4 w-4 shrink-0"
+                              strokeWidth={1.75}
+                            />
+                          ),
+                        },
+                      ]}
                     />
                   </RowActions>
                 </div>
@@ -162,10 +191,23 @@ export function AccountsManager({
                   <span className="fc-amount text-text-muted">
                     {formatMoney(Number(account.current_balance), account.currency)}
                   </span>
-                  <RestoreFormAction
-                    action={restoreAction}
-                    id={account.id}
-                    disabled={restoring}
+                  <MoreRowActions
+                    menuLabel={`Acciones para ${account.name}`}
+                    items={[
+                      {
+                        type: "form",
+                        label: "Restaurar",
+                        action: restoreAction,
+                        hiddenFields: { id: account.id },
+                        disabled: restoring,
+                        icon: (
+                          <ActionIcons.state.restore
+                            className="h-4 w-4 shrink-0"
+                            strokeWidth={1.75}
+                          />
+                        ),
+                      },
+                    ]}
                   />
                 </div>
               </div>

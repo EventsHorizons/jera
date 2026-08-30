@@ -53,12 +53,12 @@ export default async function HomePage({
       ) : null}
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-16 sm:px-6">
-        <h1 className="text-4xl font-semibold tracking-tight">
-          {APP_NAME} — {APP_TAGLINE.toLowerCase()}
+        <h1 className="text-4xl font-semibold tracking-tight text-text">
+          Construye estabilidad, paso a paso
         </h1>
-        <p className="mt-4 text-lg text-text-secondary">
-          Un lugar único para saber cuánto dinero tienes, dónde está, de dónde viene, en qué lo
-          gastas y qué compromisos financieros tienes.
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-text-secondary">
+          {APP_NAME} es tu espacio personal para entender tu dinero, tomar mejores decisiones y
+          ver crecer tu ahorro — sin ruido ni presión.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
           <Link href="/register" className="fc-btn-ai">

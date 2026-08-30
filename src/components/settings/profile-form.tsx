@@ -82,7 +82,7 @@ export function ProfileForm({
         <select
           name="baseCurrency"
           defaultValue={baseCurrency}
-          className="h-11 min-h-11 rounded-xl border border-border/80 bg-surface px-4 text-text outline-none transition focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5"
+          className="h-11 min-h-11 rounded-xl border border-border/80 bg-surface px-4 text-text outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
         >
           {BASE_CURRENCIES.map((c) => (
             <option key={c.value} value={c.value}>

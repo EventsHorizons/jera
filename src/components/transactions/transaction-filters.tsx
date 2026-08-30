@@ -14,7 +14,7 @@ type FilterParams = {
 };
 
 const fieldClass =
-  "h-11 min-h-11 w-full rounded-xl border border-border/80 bg-surface px-4 text-sm outline-none transition focus:border-zinc-300 focus:ring-2 focus:ring-zinc-900/5";
+  "h-11 min-h-11 w-full rounded-xl border border-border/80 bg-surface px-4 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10";
 
 export function TransactionFilters({
   params,

@@ -70,8 +70,8 @@ export function JeraLogo({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span
         className={cn(
-          "inline-flex items-center justify-center bg-zinc-900 font-medium text-white",
-          "shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+          "inline-flex items-center justify-center bg-primary font-medium text-on-primary",
+          "shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
           runeFont,
           badgeBox[size],
         )}
